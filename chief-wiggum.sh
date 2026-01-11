@@ -275,14 +275,19 @@ while [ $STORY_COUNT -lt $MAX_STORIES ]; do
   else
     echo ""
     echo "Story $STORY_ID did not complete within $MAX_ITERATIONS_PER_STORY iterations."
-    echo "Check output for details. The story may need to be split into smaller tasks."
+    echo "The story may need to be split into smaller tasks."
 
     # Log timeout to progress file
     echo "" >> "$PROGRESS_FILE"
     echo "## $(date) - $STORY_ID TIMEOUT" >> "$PROGRESS_FILE"
     echo "Story: $STORY_TITLE" >> "$PROGRESS_FILE"
     echo "Did not complete within max iterations." >> "$PROGRESS_FILE"
+    echo "Consider splitting this story into smaller tasks." >> "$PROGRESS_FILE"
     echo "---" >> "$PROGRESS_FILE"
+
+    echo ""
+    echo "Stopping execution. Split the story or increase max-iterations, then restart."
+    exit 1
   fi
 
   echo ""
