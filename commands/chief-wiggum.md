@@ -2,18 +2,21 @@
 name: chief-wiggum
 description: "Execute all user stories from prd.json autonomously using ralph-loop"
 argument-hint: "[max_stories]"
-allowed-tools: ["Bash($CLAUDE_PLUGIN_ROOT/chief-wiggum.sh:*)"]
 ---
 
 # Chief Wiggum - Autonomous PRD Executor
 
-Execute the Chief Wiggum orchestrator to process user stories:
+Execute the Chief Wiggum orchestrator to process user stories from `prd.json`.
 
-```!
-"$CLAUDE_PLUGIN_ROOT/chief-wiggum.sh" $ARGUMENTS
-```
+## Execution
 
-This will read `prd.json` from your current directory and execute each incomplete story using `/ralph-loop`.
+Use the Bash tool to run the orchestrator script located at:
+`$CLAUDE_PLUGIN_ROOT/chief-wiggum.sh`
+
+If `$CLAUDE_PLUGIN_ROOT` is not set, the plugin is installed at:
+`~/.claude/plugins/chief-wiggum/chief-wiggum.sh`
+
+Pass any arguments (like max_stories) to the script.
 
 ## What happens:
 
