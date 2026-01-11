@@ -16,7 +16,7 @@
         "name": "Kobozo",
         "url": "https://github.com/kobozo"
       },
-      "source": ".",
+      "source": "./",
       "category": "productivity"
     }
   ]
