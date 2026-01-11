@@ -23,7 +23,7 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
 ## Architecture
 
 ```
-/chief-wiggum (or commands/chief-wiggum.sh)
+/chief-wiggum (or chief-wiggum.sh)
     |
     +-- Reads prd.json from current directory
     +-- Picks highest priority story where passes: false
@@ -41,7 +41,7 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
 | File | Purpose |
 |------|---------|
 | `plugin.json` | Plugin manifest |
-| `commands/chief-wiggum.sh` | Main orchestrator script |
+| `chief-wiggum.sh` | Main orchestrator script |
 | `chief-wiggum.config.json` | Configuration (iterations, promises, quality checks) |
 | `story-prompt.template.md` | Template for story execution prompts |
 | `skills/prd/` | Skill for generating PRDs |
@@ -65,10 +65,10 @@ These files live in your project directory (not the plugin):
 /chief-wiggum
 
 # Or directly
-./commands/chief-wiggum.sh
+./chief-wiggum.sh
 
 # Limit to N stories
-./commands/chief-wiggum.sh 5
+./chief-wiggum.sh 5
 ```
 
 ## Configuration

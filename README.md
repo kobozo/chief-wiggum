@@ -42,7 +42,7 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
    ```bash
    /chief-wiggum
    # or directly:
-   ~/.claude/plugins/chief-wiggum/commands/chief-wiggum.sh
+   ~/.claude/plugins/chief-wiggum/chief-wiggum.sh
    ```
 
 ## Two-Tier Architecture
@@ -67,15 +67,14 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
 ```
 chief-wiggum/
 ├── plugin.json                 # Plugin manifest
-├── commands/
-│   └── chief-wiggum.sh        # Main orchestrator
+├── chief-wiggum.sh            # Main orchestrator script
+├── chief-wiggum.config.json   # Configuration
+├── story-prompt.template.md   # Prompt template
 ├── hooks/
 │   └── stop-hook.sh           # Optional stop hook
 ├── skills/
 │   ├── prd/SKILL.md           # PRD generation skill
 │   └── chief-wiggum/SKILL.md  # PRD-to-JSON converter skill
-├── chief-wiggum.config.json   # Configuration
-├── story-prompt.template.md   # Prompt template
 ├── CLAUDE.md                  # Plugin instructions
 └── README.md                  # This file
 ```

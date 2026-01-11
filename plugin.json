@@ -8,7 +8,7 @@
     {
       "name": "chief-wiggum",
       "description": "Execute all user stories from prd.json autonomously",
-      "script": "commands/chief-wiggum.sh"
+      "script": "chief-wiggum.sh"
     }
   ],
   "skills": [

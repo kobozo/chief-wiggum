@@ -1,13 +1,13 @@
 #!/bin/bash
 # Chief Wiggum - Autonomous PRD executor for Claude Code
 # Two-tier architecture: Chief Wiggum (outer loop) + /ralph-loop (inner loop per story)
-# Usage: ./commands/chief-wiggum.sh [max_stories] or via /chief-wiggum command
+# Usage: ./chief-wiggum.sh [max_stories] or via /chief-wiggum command
 
 set -e
 
-# Script configuration - resolve to plugin root (parent of commands/)
+# Script configuration - script is at plugin root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PLUGIN_DIR="$SCRIPT_DIR"
 
 # Files in current working directory (user's project)
 PRD_FILE="$(pwd)/prd.json"
