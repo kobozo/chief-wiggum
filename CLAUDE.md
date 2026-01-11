@@ -5,7 +5,7 @@
 Chief Wiggum is an autonomous PRD executor plugin for Claude Code. It uses the `/ralph-loop` skill to execute user stories from a PRD with iterative completion support. Two-tier architecture:
 
 1. **Chief Wiggum (Outer Loop)**: Orchestrates story execution, tracks progress, manages state
-2. **Ralph Loop (Inner Loop)**: Each story executes via `/ralph-loop` with iteration support
+2. **Inner Loop (/ralph-loop)**: Each story executes via `/ralph-loop` with iteration support
 
 ## Installation
 

@@ -63,7 +63,7 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
 ```
 
 1. **Chief Wiggum (Outer Loop)**: Orchestrates story execution, tracks progress
-2. **Ralph Loop (Inner Loop)**: Each story runs with iteration support until complete
+2. **Inner Loop (/ralph-loop)**: Each story runs with iteration support until complete
 
 ## Plugin Structure
 
