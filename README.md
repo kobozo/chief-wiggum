@@ -8,14 +8,14 @@ An autonomous PRD executor plugin for Claude Code. Orchestrates story execution 
 
 ## Installation
 
-### Via Claude Code Plugin System
+### Via Marketplace (Recommended)
 
 ```bash
-# First, install the required ralph-loop plugin
-claude plugins install ralph-loop
+# Add the kobozo marketplace
+claude plugin marketplace add https://github.com/kobozo/chief-wiggum
 
-# Then install chief-wiggum
-claude plugins install github:kobozo/chief-wiggum
+# Install chief-wiggum from the marketplace
+claude plugin install chief-wiggum
 ```
 
 ### Manual Installation

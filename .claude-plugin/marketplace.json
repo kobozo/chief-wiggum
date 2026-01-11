@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "kobozo-plugins",
+  "version": "1.0.0",
+  "description": "Kobozo's Claude Code plugins including Chief Wiggum autonomous PRD executor",
+  "owner": {
+    "name": "Kobozo",
+    "url": "https://github.com/kobozo"
+  },
+  "plugins": [
+    {
+      "name": "chief-wiggum",
+      "description": "Autonomous PRD executor using Claude Code's /ralph-loop for iterative story completion",
+      "version": "1.0.0",
+      "author": {
+        "name": "Kobozo",
+        "url": "https://github.com/kobozo"
+      },
+      "source": ".",
+      "category": "productivity"
+    }
+  ]
+}
