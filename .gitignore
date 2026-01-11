@@ -9,3 +9,7 @@ progress.txt
 # OS files
 .DS_Store
 .chunkhound
+
+# Debug logs
+firebase-debug.log
+*.log
