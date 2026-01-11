@@ -10,7 +10,10 @@ Chief Wiggum is an autonomous PRD executor plugin for Claude Code. It uses the `
 ## Installation
 
 ```bash
-# Install via Claude Code plugins
+# First, install the required ralph-loop plugin (Claude Code default plugin)
+claude plugins install ralph-loop
+
+# Then install chief-wiggum
 claude plugins install github:kobozo/chief-wiggum
 
 # Or clone manually

@@ -21,7 +21,10 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and authenticated
 - `jq` installed (`brew install jq` on macOS)
 - A git repository for your project
-- The `/ralph-loop:ralph-loop` skill installed
+- The `ralph-loop` plugin installed (Claude Code default plugin):
+  ```bash
+  claude plugins install ralph-loop
+  ```
 
 ## Quick Start
 
