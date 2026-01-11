@@ -41,7 +41,7 @@ const allSteps: { id: string; label: string; description: string; phase: Phase }
   { id: '3', label: 'Run chief-wiggum.sh', description: 'Starts the autonomous loop', phase: 'setup' },
   // Loop phase
   { id: '4', label: 'Claude picks a story', description: 'Finds next passes: false', phase: 'loop' },
-  { id: '5', label: 'Implements it', description: 'Uses /ralph-loop', phase: 'loop' },
+  { id: '5', label: 'Implements it', description: 'Uses /ralph-loop:ralph-loop', phase: 'loop' },
   { id: '6', label: 'Commits changes', description: 'If tests pass', phase: 'loop' },
   { id: '7', label: 'Updates prd.json', description: 'Sets passes: true', phase: 'loop' },
   { id: '8', label: 'Logs to progress.txt', description: 'Saves learnings', phase: 'loop' },
@@ -326,7 +326,7 @@ function App() {
     <div className="app-container">
       <div className="header">
         <h1>How Chief Wiggum Works with Claude Code</h1>
-        <p>Autonomous AI agent loop for completing PRDs using /ralph-loop</p>
+        <p>Autonomous AI agent loop for completing PRDs using /ralph-loop:ralph-loop</p>
       </div>
       <div className="flow-container">
         <ReactFlow
