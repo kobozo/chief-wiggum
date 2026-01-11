@@ -1,6 +1,6 @@
 {
   "project": "MyApp",
-  "branchName": "ralph/sample-feature",
+  "branchName": "clancy/sample-feature",
   "description": "Sample Feature - Demonstrates Chief Wiggum with Claude Code",
   "userStories": [
     {

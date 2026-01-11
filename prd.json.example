@@ -1,6 +1,6 @@
 {
   "project": "MyApp",
-  "branchName": "chief-wiggum/task-priority",
+  "branchName": "clancy/task-priority",
   "description": "Task Priority System - Add priority levels to tasks",
   "userStories": [
     {
