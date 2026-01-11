@@ -89,7 +89,7 @@ Each Claude Code invocation is fresh. Memory persists via:
 - Git history (commits from previous stories)
 - `progress.txt` (learnings and patterns)
 - `prd.json` (story completion status)
-- `AGENTS.md` files (codebase patterns)
+- `CLAUDE.md` files (codebase patterns)
 
 ## Skills
 
@@ -104,5 +104,5 @@ Converts PRD markdown files to `prd.json` format for Chief Wiggum execution.
 1. **Small Stories**: Each story should complete in one context window
 2. **Clear Criteria**: Acceptance criteria must be verifiable
 3. **Dependency Order**: Schema -> Backend -> UI
-4. **Update AGENTS.md**: Record reusable patterns
+4. **Update CLAUDE.md**: Record reusable patterns
 5. **Browser Testing**: UI stories must include browser verification

@@ -24,7 +24,7 @@ You are an autonomous coding agent working on a single user story.
 3. **Implement:** Complete this single user story
 4. **Quality Checks:** Run the following quality checks:
 {{QUALITY_CHECKS}}
-5. **Update AGENTS.md:** If you discover reusable patterns, add them to nearby AGENTS.md files
+5. **Update CLAUDE.md:** If you discover reusable patterns, add them to nearby CLAUDE.md files
 6. **Commit:** If checks pass, commit ALL changes with message: `feat: {{STORY_ID}} - {{STORY_TITLE}}`
 7. **Update Progress:** Append your progress to `progress.txt`
 
