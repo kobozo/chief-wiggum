@@ -1,0 +1,30 @@
+{
+  "maxIterationsPerStory": 25,
+  "completionPromise": "STORY_COMPLETE",
+  "blockedPromise": "BLOCKED",
+  "qualityChecks": [
+    {
+      "name": "typecheck",
+      "command": "npm run typecheck",
+      "description": "Run TypeScript type checking"
+    },
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "description": "Run ESLint"
+    },
+    {
+      "name": "test",
+      "command": "npm run test",
+      "description": "Run test suite"
+    }
+  ],
+  "claude": {
+    "flags": "--dangerously-skip-permissions --print",
+    "skill": "/ralph-loop:ralph-loop"
+  },
+  "archive": {
+    "enabled": true,
+    "directory": "archive"
+  }
+}

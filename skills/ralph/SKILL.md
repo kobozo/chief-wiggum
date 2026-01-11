@@ -1,17 +1,17 @@
 ---
 name: ralph
-description: "Convert PRDs to prd.json format for the Ralph autonomous agent system. Use when you have an existing PRD and need to convert it to Ralph's JSON format. Triggers on: convert this prd, turn this into ralph format, create prd.json from this, ralph json."
+description: "Convert PRDs to prd.json format for the Chief Wiggum autonomous agent system. Use when you have an existing PRD and need to convert it to Chief Wiggum's JSON format. Triggers on: convert this prd, turn this into ralph format, create prd.json from this, ralph json, chief wiggum json."
 ---
 
-# Ralph PRD Converter
+# Chief Wiggum PRD Converter
 
-Converts existing PRDs to the prd.json format that Ralph uses for autonomous execution.
+Converts existing PRDs to the prd.json format that Chief Wiggum uses for autonomous execution with Claude Code.
 
 ---
 
 ## The Job
 
-Take a PRD (markdown file or text) and convert it to `prd.json` in your ralph directory.
+Take a PRD (markdown file or text) and convert it to `prd.json` in your Chief Wiggum directory.
 
 ---
 
@@ -44,9 +44,9 @@ Take a PRD (markdown file or text) and convert it to `prd.json` in your ralph di
 
 ## Story Size: The Number One Rule
 
-**Each story must be completable in ONE Ralph iteration (one context window).**
+**Each story must be completable in ONE Claude Code context window via /ralph-loop:ralph-loop.**
 
-Ralph spawns a fresh Amp instance per iteration with no memory of previous work. If a story is too big, the LLM runs out of context before finishing and produces broken code.
+Chief Wiggum spawns a fresh Claude Code instance per story with no memory of previous work. If a story is too big, the LLM runs out of context before finishing and produces broken code.
 
 ### Right-sized stories:
 - Add a database column and migration
@@ -81,7 +81,7 @@ Stories execute in priority order. Earlier stories must not depend on later ones
 
 ## Acceptance Criteria: Must Be Verifiable
 
-Each criterion must be something Ralph can CHECK, not something vague.
+Each criterion must be something Claude Code can CHECK, not something vague.
 
 ### Good criteria (verifiable):
 - "Add `status` column to tasks table with default 'pending'"
@@ -108,10 +108,10 @@ For stories with testable logic, also include:
 
 ### For stories that change UI, also include:
 ```
-"Verify in browser using dev-browser skill"
+"Verify in browser"
 ```
 
-Frontend stories are NOT complete until visually verified. Ralph will use the dev-browser skill to navigate to the page, interact with the UI, and confirm changes work.
+Frontend stories are NOT complete until visually verified. Claude Code will navigate to the page, interact with the UI, and confirm changes work.
 
 ---
 
@@ -188,7 +188,7 @@ Add ability to mark tasks with different statuses.
         "Each task card shows colored status badge",
         "Badge colors: gray=pending, blue=in_progress, green=done",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Verify in browser"
       ],
       "priority": 2,
       "passes": false,
@@ -203,7 +203,7 @@ Add ability to mark tasks with different statuses.
         "Changing status saves immediately",
         "UI updates without page refresh",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Verify in browser"
       ],
       "priority": 3,
       "passes": false,
@@ -217,7 +217,7 @@ Add ability to mark tasks with different statuses.
         "Filter dropdown: All | Pending | In Progress | Done",
         "Filter persists in URL params",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Verify in browser"
       ],
       "priority": 4,
       "passes": false,
@@ -240,7 +240,7 @@ Add ability to mark tasks with different statuses.
    - Copy current `prd.json` and `progress.txt` to archive
    - Reset `progress.txt` with fresh header
 
-**The ralph.sh script handles this automatically** when you run it, but if you are manually updating prd.json between runs, archive first.
+**The chief-wiggum.sh script handles this automatically** when you run it, but if you are manually updating prd.json between runs, archive first.
 
 ---
 
@@ -249,9 +249,9 @@ Add ability to mark tasks with different statuses.
 Before writing prd.json, verify:
 
 - [ ] **Previous run archived** (if prd.json exists with different branchName, archive it first)
-- [ ] Each story is completable in one iteration (small enough)
-- [ ] Stories are ordered by dependency (schema to backend to UI)
+- [ ] Each story is completable in one iteration (small enough for Claude Code context)
+- [ ] Stories are ordered by dependency (schema -> backend -> UI)
 - [ ] Every story has "Typecheck passes" as criterion
-- [ ] UI stories have "Verify in browser using dev-browser skill" as criterion
+- [ ] UI stories have "Verify in browser" as criterion
 - [ ] Acceptance criteria are verifiable (not vague)
 - [ ] No story depends on a later story

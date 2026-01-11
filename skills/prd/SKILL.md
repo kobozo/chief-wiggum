@@ -5,7 +5,7 @@ description: "Generate a Product Requirements Document (PRD) for a new feature. 
 
 # PRD Generator
 
-Create detailed Product Requirements Documents that are clear, actionable, and suitable for implementation.
+Create detailed Product Requirements Documents that are clear, actionable, and suitable for implementation with Chief Wiggum and Claude Code.
 
 ---
 
@@ -71,7 +71,7 @@ Each story needs:
 - **Description:** "As a [user], I want [feature] so that [benefit]"
 - **Acceptance Criteria:** Verifiable checklist of what "done" means
 
-Each story should be small enough to implement in one focused session.
+Each story should be small enough to implement in one focused session with Claude Code.
 
 **Format:**
 ```markdown
@@ -82,12 +82,12 @@ Each story should be small enough to implement in one focused session.
 - [ ] Specific verifiable criterion
 - [ ] Another criterion
 - [ ] Typecheck/lint passes
-- [ ] **[UI stories only]** Verify in browser using dev-browser skill
+- [ ] **[UI stories only]** Verify in browser
 ```
 
-**Important:** 
+**Important:**
 - Acceptance criteria must be verifiable, not vague. "Works correctly" is bad. "Button shows confirmation dialog before deleting" is good.
-- **For any story with UI changes:** Always include "Verify in browser using dev-browser skill" as acceptance criteria. This ensures visual verification of frontend work.
+- **For any story with UI changes:** Always include "Verify in browser" as acceptance criteria. This ensures visual verification of frontend work.
 
 ### 4. Functional Requirements
 Numbered list of specific functionalities:
@@ -119,15 +119,16 @@ Remaining questions or areas needing clarification.
 
 ---
 
-## Writing for Junior Developers
+## Writing for Claude Code
 
-The PRD reader may be a junior developer or AI agent. Therefore:
+The PRD reader will be Claude Code executing via Chief Wiggum. Therefore:
 
 - Be explicit and unambiguous
 - Avoid jargon or explain it
 - Provide enough detail to understand purpose and core logic
 - Number requirements for easy reference
 - Use concrete examples where helpful
+- Stories should be small enough to complete in one context window
 
 ---
 
@@ -172,7 +173,7 @@ Add priority levels to tasks so users can focus on what matters most. Tasks can 
 - [ ] Each task card shows colored priority badge (red=high, yellow=medium, gray=low)
 - [ ] Priority visible without hovering or clicking
 - [ ] Typecheck passes
-- [ ] Verify in browser using dev-browser skill
+- [ ] Verify in browser
 
 ### US-003: Add priority selector to task edit
 **Description:** As a user, I want to change a task's priority when editing it.
@@ -182,7 +183,7 @@ Add priority levels to tasks so users can focus on what matters most. Tasks can 
 - [ ] Shows current priority as selected
 - [ ] Saves immediately on selection change
 - [ ] Typecheck passes
-- [ ] Verify in browser using dev-browser skill
+- [ ] Verify in browser
 
 ### US-004: Filter tasks by priority
 **Description:** As a user, I want to filter the task list to see only high-priority items when I'm focused.
@@ -192,7 +193,7 @@ Add priority levels to tasks so users can focus on what matters most. Tasks can 
 - [ ] Filter persists in URL params
 - [ ] Empty state message when no tasks match filter
 - [ ] Typecheck passes
-- [ ] Verify in browser using dev-browser skill
+- [ ] Verify in browser
 
 ## Functional Requirements
 
@@ -234,7 +235,7 @@ Before saving the PRD:
 
 - [ ] Asked clarifying questions with lettered options
 - [ ] Incorporated user's answers
-- [ ] User stories are small and specific
+- [ ] User stories are small and specific (completable in one Claude Code session)
 - [ ] Functional requirements are numbered and unambiguous
 - [ ] Non-goals section defines clear boundaries
 - [ ] Saved to `tasks/prd-[feature-name].md`
