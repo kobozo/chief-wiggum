@@ -1,8 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "kobozo-plugins",
+  "name": "chief-wiggum-marketplace",
   "version": "1.0.0",
-  "description": "Kobozo's Claude Code plugins including Chief Wiggum autonomous PRD executor",
+  "description": "Chief Wiggum marketplace - Autonomous PRD executor for Claude Code",
   "owner": {
     "name": "Kobozo",
     "url": "https://github.com/kobozo"
