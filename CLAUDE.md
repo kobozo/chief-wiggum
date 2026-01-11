@@ -86,7 +86,7 @@ These files live in your project directory (not the plugin):
 | `/chief-wiggum` | Execute stories from prd.json via ralph-loop |
 | `/chief-wiggum 5` | Execute max 5 stories |
 | `/prd` | Generate a PRD document |
-| `/chief-wiggum:chief-wiggum` | Convert PRD markdown to prd.json |
+| `/prd-convert` | Convert PRD markdown to prd.json |
 
 ## Configuration
 
@@ -143,7 +143,7 @@ Each Claude Code invocation is fresh. Memory persists via:
 ### PRD Skill (`/prd`)
 Generates detailed Product Requirements Documents from feature descriptions.
 
-### Chief Wiggum Skill (`/chief-wiggum:chief-wiggum`)
+### PRD Convert Command (`/prd-convert`)
 Converts PRD markdown files to `prd.json` format for Chief Wiggum execution.
 
 ## Best Practices

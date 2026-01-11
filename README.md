@@ -38,9 +38,9 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
    /prd create a task management feature
    ```
 
-2. **Convert to prd.json** using the chief-wiggum skill:
+2. **Convert to prd.json** using the prd-convert command:
    ```
-   /chief-wiggum:chief-wiggum convert tasks/prd-task-management.md
+   /prd-convert tasks/prd-task-management.md
    ```
 
 3. **Run Chief Wiggum**:
@@ -90,14 +90,14 @@ chief-wiggum/
 └── README.md                    # This file
 ```
 
-## Commands & Skills
+## Commands
 
-| Command/Skill | Description |
-|---------------|-------------|
+| Command | Description |
+|---------|-------------|
 | `/chief-wiggum` | Execute all stories from prd.json |
 | `/chief-wiggum 5` | Execute max 5 stories |
 | `/prd` | Generate a PRD document |
-| `/chief-wiggum:chief-wiggum` | Convert PRD to prd.json format |
+| `/prd-convert` | Convert PRD to prd.json format |
 
 ## User Project Files
 

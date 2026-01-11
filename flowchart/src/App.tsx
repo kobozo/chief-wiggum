@@ -35,7 +35,7 @@ const phaseColors: Record<Phase, { bg: string; border: string }> = {
 const allSteps: { id: string; label: string; description: string; phase: Phase }[] = [
   // User phase
   { id: '1', label: 'Create PRD with /prd', description: 'Describe your feature', phase: 'user' },
-  { id: '2', label: 'Convert with /chief-wiggum:chief-wiggum', description: 'Creates prd.json', phase: 'user' },
+  { id: '2', label: 'Convert with /prd-convert', description: 'Creates prd.json', phase: 'user' },
   { id: '3', label: 'Run /chief-wiggum', description: 'Starts orchestration', phase: 'command' },
   // Command execution
   { id: '4', label: 'Executes chief-wiggum.sh', description: 'Shell script orchestrator', phase: 'command' },
