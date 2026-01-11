@@ -194,19 +194,54 @@ while [ $STORY_COUNT -lt $MAX_STORIES ]; do
   # Render the prompt with story data
   PROMPT=$(render_prompt "$STORY_ID" "$STORY_TITLE" "$STORY_DESCRIPTION" "$ACCEPTANCE_CRITERIA" "$PROJECT_NAME" "$BRANCH_NAME" "$PROJECT_DESCRIPTION")
 
-  # Escape the prompt for command line (handle quotes and special chars)
-  ESCAPED_PROMPT=$(echo "$PROMPT" | sed 's/"/\\"/g' | tr '\n' ' ')
+  # Write prompt to temp file for claude to read
+  PROMPT_FILE=$(mktemp)
+  echo "$PROMPT" > "$PROMPT_FILE"
 
-  # Execute Claude with /ralph-loop
-  echo "Spawning Claude Code with /ralph-loop..."
+  # Execute Claude with iterative loop (Ralph technique)
+  echo "Starting iterative execution..."
   echo "Max iterations: $MAX_ITERATIONS_PER_STORY"
   echo ""
 
-  # Run Claude CLI with /ralph-loop skill
-  OUTPUT=$(claude --dangerously-skip-permissions --print "/ralph-loop \"$ESCAPED_PROMPT\" --max-iterations $MAX_ITERATIONS_PER_STORY --completion-promise $COMPLETION_PROMISE" 2>&1 | tee /dev/stderr) || true
+  ITERATION=0
+  STORY_RESULT=""
+
+  while [ $ITERATION -lt $MAX_ITERATIONS_PER_STORY ]; do
+    ITERATION=$((ITERATION + 1))
+    echo ""
+    echo "--- Iteration $ITERATION of $MAX_ITERATIONS_PER_STORY ---"
+
+    # Run Claude with the prompt
+    # Use --continue to maintain conversation context between iterations
+    if [ $ITERATION -eq 1 ]; then
+      # First iteration: start fresh
+      OUTPUT=$(cat "$PROMPT_FILE" | claude --dangerously-skip-permissions --print 2>&1 | tee /dev/stderr) || true
+    else
+      # Subsequent iterations: continue with same prompt
+      OUTPUT=$(cat "$PROMPT_FILE" | claude --dangerously-skip-permissions --print --continue 2>&1 | tee /dev/stderr) || true
+    fi
+
+    # Check for completion or blocked signals
+    if echo "$OUTPUT" | grep -q "<promise>$COMPLETION_PROMISE</promise>"; then
+      STORY_RESULT="COMPLETE"
+      break
+    elif echo "$OUTPUT" | grep -q "<promise>$BLOCKED_PROMISE</promise>"; then
+      STORY_RESULT="BLOCKED"
+      break
+    fi
+
+    echo "Iteration $ITERATION complete, continuing..."
+    sleep 1
+  done
+
+  # Clean up temp file
+  rm -f "$PROMPT_FILE"
+
+  echo ""
+  echo "Finished after $ITERATION iterations"
 
   # Check for completion signal
-  if echo "$OUTPUT" | grep -q "<promise>$COMPLETION_PROMISE</promise>"; then
+  if [ "$STORY_RESULT" = "COMPLETE" ]; then
     echo ""
     echo "Story $STORY_ID completed successfully!"
     mark_story_complete "$STORY_ID"
@@ -222,7 +257,7 @@ while [ $STORY_COUNT -lt $MAX_STORIES ]; do
     echo "Story: $STORY_TITLE" >> "$PROGRESS_FILE"
     echo "---" >> "$PROGRESS_FILE"
 
-  elif echo "$OUTPUT" | grep -q "<promise>$BLOCKED_PROMISE</promise>"; then
+  elif [ "$STORY_RESULT" = "BLOCKED" ]; then
     echo ""
     echo "Story $STORY_ID is BLOCKED!"
     echo "Check progress.txt for blocker details."

@@ -29,7 +29,6 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and authenticated
 - `jq` installed (`brew install jq` on macOS)
 - A git repository for your project
-- The `ralph-loop` plugin installed
 
 ## Quick Start
 
@@ -56,14 +55,15 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
     ├── Executes chief-wiggum.sh
     │
     └── For each story in prd.json:
-        ├── Spawns: claude --print "/ralph-loop <prompt>"
+        ├── Iterative loop (Ralph technique)
+        │   └── claude --print <prompt> (repeats until done)
         ├── Detects STORY_COMPLETE or BLOCKED
         ├── Updates prd.json (passes: true)
         └── Continues to next story
 ```
 
 1. **Chief Wiggum (Outer Loop)**: Orchestrates story execution, tracks progress
-2. **Inner Loop (/ralph-loop)**: Each story runs with iteration support until complete
+2. **Inner Loop (Ralph technique)**: Each story runs with iterative prompting until complete
 
 ## Plugin Structure
 
@@ -132,9 +132,10 @@ Chief Wiggum will:
 
 1. Read `prd.json` from current directory
 2. Pick the highest priority story where `passes: false`
-3. Spawn Claude Code with `/ralph-loop`:
+3. Execute iterative loop (Ralph technique):
    ```bash
-   claude --dangerously-skip-permissions --print "/ralph-loop \"<prompt>\" --max-iterations 25 --completion-promise STORY_COMPLETE"
+   # Repeats up to max-iterations until STORY_COMPLETE detected
+   cat prompt.md | claude --dangerously-skip-permissions --print --continue
    ```
 4. Implement that single story with iteration support
 5. Run quality checks (typecheck, tests)
