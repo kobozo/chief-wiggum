@@ -112,3 +112,17 @@ Before saving the PRD:
 - [ ] Functional requirements are numbered and unambiguous
 - [ ] Non-goals section defines clear boundaries
 - [ ] Saved to `tasks/prd-[feature-name].md`
+
+## Final Step: Integration Prompt
+
+After saving the PRD, ask the user:
+
+> "PRD saved to `tasks/prd-[feature-name].md`. Would you like to integrate this feature now? I can convert it to `prd.json` and prepare it for execution with `/chief-wiggum`."
+
+**If user agrees:**
+1. Run `/prd-convert tasks/prd-[feature-name].md`
+2. After conversion completes, inform the user:
+   > "Done! Your feature is ready for autonomous execution. Run `/chief-wiggum` to start implementing all user stories."
+
+**If user declines:**
+Simply acknowledge and let them know they can run `/prd-convert` later when ready.
