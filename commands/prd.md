@@ -11,11 +11,38 @@ Create detailed Product Requirements Documents that are clear, actionable, and s
 ## The Job
 
 1. Receive a feature description from the user
-2. Ask 3-5 essential clarifying questions (with lettered options)
-3. Generate a structured PRD based on answers
-4. Save to `tasks/prd-[feature-name].md`
+2. **Analyze the codebase** using feature-dev plugin (if available)
+3. Ask 3-5 essential clarifying questions (with lettered options)
+4. Generate a structured PRD based on answers and codebase context
+5. Save to `tasks/prd-[feature-name].md`
 
 **Important:** Do NOT start implementing. Just create the PRD.
+
+## Step 0: Codebase Analysis (Using feature-dev)
+
+**If the `feature-dev` plugin is installed**, use it to understand the codebase before generating the PRD:
+
+1. **Spawn the code-explorer agent** to analyze relevant parts of the codebase:
+   ```
+   Use Task tool with subagent_type: "feature-dev:code-explorer"
+   Prompt: "Analyze the codebase to understand: existing patterns, architecture layers,
+   relevant components, and conventions that would affect implementing [feature description]"
+   ```
+
+2. **Gather context about:**
+   - Existing similar features or patterns to follow
+   - Database schema and models relevant to the feature
+   - UI component patterns and styling conventions
+   - API/backend patterns (routes, controllers, services)
+   - Testing patterns in use
+
+3. **Use this context** to generate more accurate:
+   - User stories that align with existing architecture
+   - Acceptance criteria referencing actual components
+   - Technical considerations based on real constraints
+   - Proper story sizing based on codebase complexity
+
+**If feature-dev is not available**, proceed directly to clarifying questions.
 
 ## Step 1: Clarifying Questions
 
@@ -87,8 +114,15 @@ What this feature will NOT include.
 ### 6. Design Considerations (Optional)
 UI/UX requirements, mockups, existing components to reuse.
 
-### 7. Technical Considerations (Optional)
+### 7. Technical Considerations
 Constraints, dependencies, integration points.
+
+**If codebase was analyzed with feature-dev, include:**
+- Existing patterns to follow (e.g., "Follow the pattern in `src/features/auth/`")
+- Components to reuse or extend
+- Database tables/models to modify or create
+- API endpoints to add or update
+- Testing approach based on existing test patterns
 
 ### 8. Success Metrics
 How will success be measured?
