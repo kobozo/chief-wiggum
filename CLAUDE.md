@@ -1,18 +1,28 @@
-# Chief Wiggum - Claude Code Instructions
+# Chief Wiggum - Claude Code Plugin
 
 ## Overview
 
-Chief Wiggum is an autonomous AI agent orchestrator that uses Claude Code with the `/ralph-loop:ralph-loop` skill to execute user stories from a PRD. It implements a two-tier architecture:
+Chief Wiggum is an autonomous PRD executor plugin for Claude Code. It uses the `/ralph-loop:ralph-loop` skill to execute user stories from a PRD with iterative completion support. Two-tier architecture:
 
 1. **Chief Wiggum (Outer Loop)**: Orchestrates story execution, tracks progress, manages state
-2. **Ralph Loop (Inner Loop)**: Executes each individual story with iteration support
+2. **Inner Loop**: Each story executes via `/ralph-loop:ralph-loop` with iteration support
+
+## Installation
+
+```bash
+# Install via Claude Code plugins
+claude plugins install github:kobozo/chief-wiggum
+
+# Or clone manually
+git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
+```
 
 ## Architecture
 
 ```
-chief-wiggum.sh (Outer Orchestrator)
+/chief-wiggum (or commands/chief-wiggum.sh)
     |
-    +-- Reads prd.json for stories
+    +-- Reads prd.json from current directory
     +-- Picks highest priority story where passes: false
     +-- Generates prompt from story-prompt.template.md
     +-- Spawns: claude --dangerously-skip-permissions --print "/ralph-loop:ralph-loop \"<prompt>\" --max-iterations 25 --completion-promise STORY_COMPLETE"
@@ -23,25 +33,39 @@ chief-wiggum.sh (Outer Orchestrator)
     +-- Repeats until all stories complete
 ```
 
-## Key Files
+## Plugin Structure
 
 | File | Purpose |
 |------|---------|
-| `chief-wiggum.sh` | Main orchestrator script |
+| `plugin.json` | Plugin manifest |
+| `commands/chief-wiggum.sh` | Main orchestrator script |
 | `chief-wiggum.config.json` | Configuration (iterations, promises, quality checks) |
 | `story-prompt.template.md` | Template for story execution prompts |
+| `skills/prd/` | Skill for generating PRDs |
+| `skills/chief-wiggum/` | Skill for converting PRDs to prd.json |
+| `hooks/stop-hook.sh` | Optional stop hook |
+
+## User Project Files
+
+These files live in your project directory (not the plugin):
+
+| File | Purpose |
+|------|---------|
 | `prd.json` | User stories with `passes` status |
 | `progress.txt` | Append-only learnings log |
-| `skills/` | Claude Code skills for PRD generation and conversion |
+| `archive/` | Previous run archives |
 
-## Running Chief Wiggum
+## Usage
 
 ```bash
-# Execute all stories (default)
-./chief-wiggum.sh
+# Via plugin command
+/chief-wiggum
+
+# Or directly
+./commands/chief-wiggum.sh
 
 # Limit to N stories
-./chief-wiggum.sh 5
+./commands/chief-wiggum.sh 5
 ```
 
 ## Configuration
@@ -96,7 +120,7 @@ Each Claude Code invocation is fresh. Memory persists via:
 ### PRD Skill (`/prd`)
 Generates detailed Product Requirements Documents from feature descriptions.
 
-### Ralph Skill (`/ralph`)
+### Chief Wiggum Skill (`/chief-wiggum`)
 Converts PRD markdown files to `prd.json` format for Chief Wiggum execution.
 
 ## Best Practices
