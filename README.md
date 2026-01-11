@@ -1,5 +1,9 @@
 # Chief Wiggum
 
+<p align="center">
+  <img src="https://upload.wikimedia.org/wikipedia/en/7/7a/Chief_Wiggum.png" alt="Chief Wiggum" width="150">
+</p>
+
 An autonomous PRD executor plugin for Claude Code. Orchestrates story execution using the `/ralph-loop` skill to iterate until each story is complete.
 
 ## Installation
