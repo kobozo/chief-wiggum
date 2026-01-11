@@ -1,172 +1,181 @@
-# Ralph
+# Chief Wiggum
 
-![Ralph](ralph.webp)
+<p align="center">
+  <img src="https://upload.wikimedia.org/wikipedia/en/7/7a/Chief_Wiggum.png" alt="Chief Wiggum" width="150">
+</p>
 
-Ralph is an autonomous AI agent loop that runs [Amp](https://ampcode.com) repeatedly until all PRD items are complete. Each iteration is a fresh Amp instance with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
+An autonomous PRD executor plugin for Claude Code. Orchestrates story execution using the `/ralph-loop` skill to iterate until each story is complete.
 
-Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
+## Installation
 
-[Read my in-depth article on how I use Ralph](https://x.com/ryancarson/status/2008548371712135632)
+### Via Claude Code Plugin System
+
+```bash
+# First, install the required ralph-loop plugin
+claude plugins install ralph-loop
+
+# Then install chief-wiggum
+claude plugins install github:kobozo/chief-wiggum
+```
+
+### Manual Installation
+
+```bash
+git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
+```
 
 ## Prerequisites
 
-- [Amp CLI](https://ampcode.com) installed and authenticated
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and authenticated
 - `jq` installed (`brew install jq` on macOS)
 - A git repository for your project
+- The `ralph-loop` plugin installed
 
-## Setup
+## Quick Start
 
-### Option 1: Copy to your project
+1. **Create a PRD** using the `/prd` skill:
+   ```
+   /prd create a task management feature
+   ```
 
-Copy the ralph files into your project:
+2. **Convert to prd.json** using the chief-wiggum skill:
+   ```
+   /chief-wiggum:chief-wiggum convert tasks/prd-task-management.md
+   ```
 
-```bash
-# From your project root
-mkdir -p scripts/ralph
-cp /path/to/ralph/ralph.sh scripts/ralph/
-cp /path/to/ralph/prompt.md scripts/ralph/
-chmod +x scripts/ralph/ralph.sh
-```
+3. **Run Chief Wiggum**:
+   ```
+   /chief-wiggum
+   ```
 
-### Option 2: Install skills globally
-
-Copy the skills to your Amp config for use across all projects:
-
-```bash
-cp -r skills/prd ~/.config/amp/skills/
-cp -r skills/ralph ~/.config/amp/skills/
-```
-
-### Configure Amp auto-handoff (recommended)
-
-Add to `~/.config/amp/settings.json`:
-
-```json
-{
-  "amp.experimental.autoHandoff": { "context": 90 }
-}
-```
-
-This enables automatic handoff when context fills up, allowing Ralph to handle large stories that exceed a single context window.
-
-## Workflow
-
-### 1. Create a PRD
-
-Use the PRD skill to generate a detailed requirements document:
+## Two-Tier Architecture
 
 ```
-Load the prd skill and create a PRD for [your feature description]
+/chief-wiggum
+    │
+    ├── Executes chief-wiggum.sh
+    │
+    └── For each story in prd.json:
+        ├── Spawns: claude --print "/ralph-loop <prompt>"
+        ├── Detects STORY_COMPLETE or BLOCKED
+        ├── Updates prd.json (passes: true)
+        └── Continues to next story
 ```
 
-Answer the clarifying questions. The skill saves output to `tasks/prd-[feature-name].md`.
+1. **Chief Wiggum (Outer Loop)**: Orchestrates story execution, tracks progress
+2. **Inner Loop (/ralph-loop)**: Each story runs with iteration support until complete
 
-### 2. Convert PRD to Ralph format
-
-Use the Ralph skill to convert the markdown PRD to JSON:
+## Plugin Structure
 
 ```
-Load the ralph skill and convert tasks/prd-[feature-name].md to prd.json
+chief-wiggum/
+├── .claude-plugin/
+│   └── plugin.json              # Plugin manifest
+├── commands/
+│   └── chief-wiggum.md          # /chief-wiggum command
+├── agents/
+│   └── story-executor.md        # Optional agent for story execution
+├── skills/
+│   ├── prd/
+│   │   └── SKILL.md             # PRD generation skill
+│   └── chief-wiggum/
+│       └── SKILL.md             # PRD-to-JSON converter skill
+├── hooks/
+│   ├── hooks.json               # Hook configuration
+│   └── stop-hook.sh             # Stop event handler
+├── chief-wiggum.sh              # Main orchestrator script
+├── chief-wiggum.config.json     # Configuration
+├── story-prompt.template.md     # Prompt template
+├── CLAUDE.md                    # Plugin instructions
+└── README.md                    # This file
 ```
 
-This creates `prd.json` with user stories structured for autonomous execution.
+## Commands & Skills
 
-### 3. Run Ralph
+| Command/Skill | Description |
+|---------------|-------------|
+| `/chief-wiggum` | Execute all stories from prd.json |
+| `/chief-wiggum 5` | Execute max 5 stories |
+| `/prd` | Generate a PRD document |
+| `/chief-wiggum:chief-wiggum` | Convert PRD to prd.json format |
 
-```bash
-./scripts/ralph/ralph.sh [max_iterations]
-```
+## User Project Files
 
-Default is 10 iterations.
-
-Ralph will:
-1. Create a feature branch (from PRD `branchName`)
-2. Pick the highest priority story where `passes: false`
-3. Implement that single story
-4. Run quality checks (typecheck, tests)
-5. Commit if checks pass
-6. Update `prd.json` to mark story as `passes: true`
-7. Append learnings to `progress.txt`
-8. Repeat until all stories pass or max iterations reached
-
-## Key Files
+These files are created in your project directory:
 
 | File | Purpose |
 |------|---------|
-| `ralph.sh` | The bash loop that spawns fresh Amp instances |
-| `prompt.md` | Instructions given to each Amp instance |
-| `prd.json` | User stories with `passes` status (the task list) |
-| `prd.json.example` | Example PRD format for reference |
-| `progress.txt` | Append-only learnings for future iterations |
-| `skills/prd/` | Skill for generating PRDs |
-| `skills/ralph/` | Skill for converting PRDs to JSON |
-| `flowchart/` | Interactive visualization of how Ralph works |
+| `prd.json` | User stories with `passes` status |
+| `progress.txt` | Append-only learnings log |
+| `archive/` | Previous run archives |
 
-## Flowchart
+## Configuration
 
-[![Ralph Flowchart](ralph-flowchart.png)](https://snarktank.github.io/ralph/)
+Edit `chief-wiggum.config.json`:
 
-**[View Interactive Flowchart](https://snarktank.github.io/ralph/)** - Click through to see each step with animations.
-
-The `flowchart/` directory contains the source code. To run locally:
-
-```bash
-cd flowchart
-npm install
-npm run dev
+```json
+{
+  "maxIterationsPerStory": 25,
+  "completionPromise": "STORY_COMPLETE",
+  "blockedPromise": "BLOCKED",
+  "qualityChecks": [
+    {"name": "typecheck", "command": "npm run typecheck"},
+    {"name": "lint", "command": "npm run lint"},
+    {"name": "test", "command": "npm run test"}
+  ]
+}
 ```
+
+## Workflow
+
+Chief Wiggum will:
+
+1. Read `prd.json` from current directory
+2. Pick the highest priority story where `passes: false`
+3. Spawn Claude Code with `/ralph-loop`:
+   ```bash
+   claude --dangerously-skip-permissions --print "/ralph-loop \"<prompt>\" --max-iterations 25 --completion-promise STORY_COMPLETE"
+   ```
+4. Implement that single story with iteration support
+5. Run quality checks (typecheck, tests)
+6. Commit if checks pass
+7. Detect `STORY_COMPLETE` promise and update `prd.json`
+8. Append learnings to `progress.txt`
+9. Repeat until all stories pass or blocked
 
 ## Critical Concepts
 
-### Each Iteration = Fresh Context
+### Each Story = Fresh Context
 
-Each iteration spawns a **new Amp instance** with clean context. The only memory between iterations is:
-- Git history (commits from previous iterations)
+Each story spawns a **new Claude Code instance** with clean context. Memory persists via:
+- Git history (commits from previous stories)
 - `progress.txt` (learnings and context)
 - `prd.json` (which stories are done)
 
 ### Small Tasks
 
-Each PRD item should be small enough to complete in one context window. If a task is too big, the LLM runs out of context before finishing and produces poor code.
-
-Right-sized stories:
+Each story must be completable in one context window. Right-sized:
 - Add a database column and migration
 - Add a UI component to an existing page
 - Update a server action with new logic
-- Add a filter dropdown to a list
 
 Too big (split these):
 - "Build the entire dashboard"
 - "Add authentication"
 - "Refactor the API"
 
-### AGENTS.md Updates Are Critical
+### Promise System
 
-After each iteration, Ralph updates the relevant `AGENTS.md` files with learnings. This is key because Amp automatically reads these files, so future iterations (and future human developers) benefit from discovered patterns, gotchas, and conventions.
+- `<promise>STORY_COMPLETE</promise>` - Story successfully implemented
+- `<promise>BLOCKED</promise>` - Cannot proceed, needs human intervention
 
-Examples of what to add to AGENTS.md:
-- Patterns discovered ("this codebase uses X for Y")
-- Gotchas ("do not forget to update Z when changing W")
-- Useful context ("the settings panel is in component X")
+**Note:** The `/ralph-loop` plugin only detects `STORY_COMPLETE` as the completion promise. If Claude outputs `BLOCKED`, the loop will continue until `max-iterations` is reached.
 
-### Feedback Loops
+### Browser Verification
 
-Ralph only works if there are feedback loops:
-- Typecheck catches type errors
-- Tests verify behavior
-- CI must stay green (broken code compounds across iterations)
-
-### Browser Verification for UI Stories
-
-Frontend stories must include "Verify in browser using dev-browser skill" in acceptance criteria. Ralph will use the dev-browser skill to navigate to the page, interact with the UI, and confirm changes work.
-
-### Stop Condition
-
-When all stories have `passes: true`, Ralph outputs `<promise>COMPLETE</promise>` and the loop exits.
+UI stories must include "Verify in browser" in acceptance criteria.
 
 ## Debugging
-
-Check current state:
 
 ```bash
 # See which stories are done
@@ -179,18 +188,25 @@ cat progress.txt
 git log --oneline -10
 ```
 
-## Customizing prompt.md
+## Customizing story-prompt.template.md
 
-Edit `prompt.md` to customize Ralph's behavior for your project:
-- Add project-specific quality check commands
-- Include codebase conventions
-- Add common gotchas for your stack
+Available placeholders:
+- `{{STORY_ID}}`, `{{STORY_TITLE}}`, `{{STORY_DESCRIPTION}}`
+- `{{ACCEPTANCE_CRITERIA}}`
+- `{{PROJECT_NAME}}`, `{{BRANCH_NAME}}`, `{{PROJECT_DESCRIPTION}}`
+- `{{QUALITY_CHECKS}}`
+- `{{COMPLETION_PROMISE}}`, `{{BLOCKED_PROMISE}}`
 
 ## Archiving
 
-Ralph automatically archives previous runs when you start a new feature (different `branchName`). Archives are saved to `archive/YYYY-MM-DD-feature-name/`.
+Chief Wiggum automatically archives previous runs when you start a new feature (different `branchName`). Archives are saved to `archive/YYYY-MM-DD-feature-name/`.
+
+## Credits
+
+This plugin is forked from [snarktank/ralph](https://github.com/snarktank/ralph), which pioneered the autonomous PRD execution pattern for Claude Code.
 
 ## References
 
-- [Geoffrey Huntley's Ralph article](https://ghuntley.com/ralph/)
-- [Amp documentation](https://ampcode.com/manual)
+- [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code)
+- [Geoffrey Huntley's iteration pattern](https://ghuntley.com/ralph/)
+- [snarktank/ralph](https://github.com/snarktank/ralph) - Original implementation
