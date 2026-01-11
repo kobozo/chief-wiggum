@@ -1,6 +1,6 @@
 # Chief Wiggum
 
-An autonomous PRD executor plugin for Claude Code. Orchestrates story execution using the `/ralph-loop:ralph-loop` skill to iterate until each story is complete.
+An autonomous PRD executor plugin for Claude Code. Orchestrates story execution using the `/ralph-loop` skill to iterate until each story is complete.
 
 ## Installation
 
@@ -52,7 +52,7 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
     |
     +-- Reads prd.json from current directory
     +-- Picks highest priority story where passes: false
-    +-- Spawns Claude Code with /ralph-loop:ralph-loop
+    +-- Spawns Claude Code with /ralph-loop
     |
     +-- Detects STORY_COMPLETE or BLOCKED promises
     +-- Updates prd.json (marks passes: true)
@@ -60,7 +60,7 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
 ```
 
 1. **Chief Wiggum (Outer Loop)**: Orchestrates story execution, tracks progress
-2. **Inner Loop**: Each story runs via `/ralph-loop:ralph-loop` with iteration support
+2. **Inner Loop**: Each story runs via `/ralph-loop` with iteration support
 
 ## Plugin Structure
 
@@ -113,9 +113,9 @@ Chief Wiggum will:
 
 1. Create a feature branch (from PRD `branchName`)
 2. Pick the highest priority story where `passes: false`
-3. Spawn Claude Code with `/ralph-loop:ralph-loop`:
+3. Spawn Claude Code with `/ralph-loop`:
    ```bash
-   claude --dangerously-skip-permissions --print "/ralph-loop:ralph-loop \"<prompt>\" --max-iterations 25 --completion-promise STORY_COMPLETE"
+   claude --dangerously-skip-permissions --print "/ralph-loop \"<prompt>\" --max-iterations 25 --completion-promise STORY_COMPLETE"
    ```
 4. Implement that single story with iteration support
 5. Run quality checks (typecheck, tests)
@@ -147,8 +147,10 @@ Too big (split these):
 
 ### Promise System
 
-- `<promise>STORY_COMPLETE</promise>` - Story successfully implemented
+- `<promise>STORY_COMPLETE</promise>` - Story successfully implemented (stops loop immediately)
 - `<promise>BLOCKED</promise>` - Cannot proceed, needs human intervention
+
+**Note:** The `/ralph-loop` plugin only detects `STORY_COMPLETE` as the completion promise. If Claude outputs `BLOCKED`, the loop will continue until `max-iterations` is reached, then Chief Wiggum detects the blocked status from the output.
 
 ### Browser Verification
 

@@ -21,7 +21,7 @@
   ],
   "claude": {
     "flags": "--dangerously-skip-permissions --print",
-    "skill": "/ralph-loop:ralph-loop"
+    "skill": "/ralph-loop"
   },
   "archive": {
     "enabled": true,

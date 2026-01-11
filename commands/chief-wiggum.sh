@@ -1,6 +1,6 @@
 #!/bin/bash
 # Chief Wiggum - Autonomous PRD executor for Claude Code
-# Two-tier architecture: Chief Wiggum (outer loop) + /ralph-loop:ralph-loop (inner loop per story)
+# Two-tier architecture: Chief Wiggum (outer loop) + /ralph-loop (inner loop per story)
 # Usage: ./commands/chief-wiggum.sh [max_stories] or via /chief-wiggum command
 
 set -e
@@ -197,13 +197,13 @@ while [ $STORY_COUNT -lt $MAX_STORIES ]; do
   # Escape the prompt for command line (handle quotes and special chars)
   ESCAPED_PROMPT=$(echo "$PROMPT" | sed 's/"/\\"/g' | tr '\n' ' ')
 
-  # Execute Claude with /ralph-loop:ralph-loop
-  echo "Spawning Claude Code with /ralph-loop:ralph-loop..."
+  # Execute Claude with /ralph-loop
+  echo "Spawning Claude Code with /ralph-loop..."
   echo "Max iterations: $MAX_ITERATIONS_PER_STORY"
   echo ""
 
-  # Run Claude CLI with /ralph-loop:ralph-loop skill
-  OUTPUT=$(claude --dangerously-skip-permissions --print "/ralph-loop:ralph-loop \"$ESCAPED_PROMPT\" --max-iterations $MAX_ITERATIONS_PER_STORY --completion-promise $COMPLETION_PROMISE" 2>&1 | tee /dev/stderr) || true
+  # Run Claude CLI with /ralph-loop skill
+  OUTPUT=$(claude --dangerously-skip-permissions --print "/ralph-loop \"$ESCAPED_PROMPT\" --max-iterations $MAX_ITERATIONS_PER_STORY --completion-promise $COMPLETION_PROMISE" 2>&1 | tee /dev/stderr) || true
 
   # Check for completion signal
   if echo "$OUTPUT" | grep -q "<promise>$COMPLETION_PROMISE</promise>"; then

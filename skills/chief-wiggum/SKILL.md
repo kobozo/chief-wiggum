@@ -44,7 +44,7 @@ Take a PRD (markdown file or text) and convert it to `prd.json` in your project 
 
 ## Story Size: The Number One Rule
 
-**Each story must be completable in ONE Claude Code context window via /ralph-loop:ralph-loop.**
+**Each story must be completable in ONE Claude Code context window via /ralph-loop.**
 
 Chief Wiggum spawns a fresh Claude Code instance per story with no memory of previous work. If a story is too big, the LLM runs out of context before finishing and produces broken code.
 
