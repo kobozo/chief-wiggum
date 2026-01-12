@@ -126,3 +126,16 @@ Before writing prd.json, verify:
 - [ ] UI stories have "Verify in browser" as criterion
 - [ ] Acceptance criteria are verifiable (not vague)
 - [ ] No story depends on a later story
+
+## After Writing the PRD File
+
+**Save the output path for chief-wiggum auto-detection:**
+
+After writing the JSON file, save its full path to `.chief-wiggum/current-prd`:
+
+```bash
+# Example: if output is readme.json
+echo "/full/path/to/readme.json" > .chief-wiggum/current-prd
+```
+
+This allows `/chief-wiggum` to automatically find the PRD file without needing `--file`.

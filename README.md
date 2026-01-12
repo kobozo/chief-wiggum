@@ -189,6 +189,42 @@ cat progress.txt
 git log --oneline -10
 ```
 
+## Troubleshooting
+
+### sed errors on macOS / "Unknown skill: ralph-loop"
+
+These errors indicate you're running a stale cached version of the plugin.
+
+**Fix:**
+```bash
+# Remove cached version
+rm -rf ~/.claude/plugins/cache/*/chief-wiggum*
+
+# Reinstall
+claude plugins install github:kobozo/chief-wiggum
+```
+
+### Verify version
+
+When chief-wiggum starts, it shows the version:
+```
+==================================================
+  Chief Wiggum v1.6.0
+  Claude Code Story Orchestrator
+==================================================
+
+PRD file: .chief-wiggum/prd.json
+```
+
+If you see a version lower than 1.5.0, you have a stale cache.
+
+### Custom PRD file not found
+
+If you used `/prd-convert --file custom.json` but `/chief-wiggum` can't find it:
+
+1. Pass the same `--file` option: `/chief-wiggum --file custom.json`
+2. Or ensure `.chief-wiggum/current-prd` contains the path (prd-convert should save this)
+
 ## Customizing story-prompt.template.md
 
 Available placeholders:
