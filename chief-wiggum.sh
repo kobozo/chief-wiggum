@@ -98,6 +98,7 @@ build_quality_checks() {
 }
 
 # Function to render the prompt template with story data
+# Uses direct content insertion instead of sed for multiline content (macOS compatible)
 render_prompt() {
   local story_id="$1"
   local story_title="$2"
@@ -110,18 +111,85 @@ render_prompt() {
   local quality_checks
   quality_checks=$(build_quality_checks)
 
-  # Read template and substitute placeholders
-  cat "$TEMPLATE_FILE" | \
-    sed "s|{{STORY_ID}}|$story_id|g" | \
-    sed "s|{{STORY_TITLE}}|$story_title|g" | \
-    sed "s|{{STORY_DESCRIPTION}}|$story_description|g" | \
-    sed "s|{{ACCEPTANCE_CRITERIA}}|$acceptance_criteria|g" | \
-    sed "s|{{PROJECT_NAME}}|$project_name|g" | \
-    sed "s|{{BRANCH_NAME}}|$branch_name|g" | \
-    sed "s|{{PROJECT_DESCRIPTION}}|$project_description|g" | \
-    sed "s|{{QUALITY_CHECKS}}|$quality_checks|g" | \
-    sed "s|{{COMPLETION_PROMISE}}|$COMPLETION_PROMISE|g" | \
-    sed "s|{{BLOCKED_PROMISE}}|$BLOCKED_PROMISE|g"
+  # Generate the story prompt directly (avoiding sed issues with multiline content)
+  cat <<STORY_PROMPT_EOF
+# Chief Wiggum Story Execution
+
+You are an autonomous coding agent working on a single user story.
+
+## Current Story
+
+**ID:** $story_id
+**Title:** $story_title
+**Description:** $story_description
+
+### Acceptance Criteria
+$acceptance_criteria
+
+## Project Context
+
+**Project:** $project_name
+**Branch:** $branch_name
+**Description:** $project_description
+
+## Your Task
+
+1. **Verify Branch:** Ensure you're on the correct branch (\`$branch_name\`). If not, check it out or create from main.
+2. **Read Context:** Check \`progress.txt\` for learnings from previous iterations (especially the Codebase Patterns section)
+3. **Implement:** Complete this single user story
+4. **Quality Checks:** Run the following quality checks:
+$quality_checks
+5. **Update CLAUDE.md:** If you discover reusable patterns, add them to nearby CLAUDE.md files
+6. **Commit:** If checks pass, commit ALL changes with message: \`feat: $story_id - $story_title\`
+7. **Update Progress:** Append your progress to \`progress.txt\`
+
+## Progress Report Format
+
+APPEND to progress.txt (never replace, always append):
+\`\`\`
+## [Date/Time] - $story_id
+- What was implemented
+- Files changed
+- **Learnings for future iterations:**
+  - Patterns discovered
+  - Gotchas encountered
+  - Useful context
+---
+\`\`\`
+
+## Quality Requirements
+
+- ALL commits must pass quality checks (typecheck, lint, test)
+- Do NOT commit broken code
+- Keep changes focused and minimal
+- Follow existing code patterns
+
+## Browser Testing (Required for UI Stories)
+
+For any story that changes UI:
+1. Navigate to the relevant page
+2. Verify the UI changes work as expected
+3. Take screenshots if helpful for the progress log
+
+## Completion
+
+When you have successfully:
+- Implemented all acceptance criteria
+- Passed all quality checks
+- Committed the changes
+- Updated progress.txt
+
+Output: <promise>$COMPLETION_PROMISE</promise>
+
+If you are blocked and cannot proceed after reasonable attempts, document the blockers in progress.txt and output: <promise>$BLOCKED_PROMISE</promise>
+
+## Important
+
+- Work on THIS story only ($story_id)
+- Commit frequently
+- Keep CI green
+- Read the Codebase Patterns section in progress.txt before starting
+STORY_PROMPT_EOF
 }
 
 # Function to get the next incomplete story
