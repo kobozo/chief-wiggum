@@ -154,6 +154,7 @@ capture_story_diff() {
 }
 
 # Function to render the review prompt template
+# Uses direct content insertion instead of sed for multiline content (macOS compatible)
 render_review_prompt() {
   local story_id="$1"
   local story_title="$2"
@@ -161,45 +162,123 @@ render_review_prompt() {
   local git_diff="$4"
   local previous_feedback="$5"
 
-  if [ ! -f "$REVIEW_TEMPLATE_FILE" ]; then
-    echo "Error: Review template not found: $REVIEW_TEMPLATE_FILE" >&2
-    return 1
-  fi
+  # Generate the review prompt directly (avoiding sed issues with multiline content)
+  cat <<REVIEW_PROMPT_EOF
+# Code Review for $story_id
 
-  # Escape special characters in git diff for sed
-  local escaped_diff=$(echo "$git_diff" | sed 's/[&/\]/\\&/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-  local escaped_feedback=$(echo "$previous_feedback" | sed 's/[&/\]/\\&/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+You are a code reviewer analyzing changes from a completed user story.
 
-  cat "$REVIEW_TEMPLATE_FILE" | \
-    sed "s|{{STORY_ID}}|$story_id|g" | \
-    sed "s|{{STORY_TITLE}}|$story_title|g" | \
-    sed "s|{{ACCEPTANCE_CRITERIA}}|$acceptance_criteria|g" | \
-    sed "s|{{GIT_DIFF}}|$escaped_diff|g" | \
-    sed "s|{{PREVIOUS_FEEDBACK}}|$escaped_feedback|g"
+## Story Context
+
+**ID:** $story_id
+**Title:** $story_title
+
+### Acceptance Criteria
+$acceptance_criteria
+
+## Git Diff (Changes Made)
+
+\`\`\`diff
+$git_diff
+\`\`\`
+
+## Previous Feedback (if any)
+
+$previous_feedback
+
+## Your Review Task
+
+Analyze the git diff above and verify:
+
+1. **Correctness** - Does the code implement ALL acceptance criteria?
+2. **Bugs** - Are there logic errors, edge cases, or null risks?
+3. **Patterns** - Does the code follow existing codebase patterns?
+4. **Completeness** - Are tests, types, and error handling adequate?
+
+## Output Format
+
+You MUST output your review in this EXACT format:
+
+If the implementation is correct:
+\`\`\`
+<review>
+STATUS: APPROVED
+COMMENTS:
+</review>
+\`\`\`
+
+If changes are needed:
+\`\`\`
+<review>
+STATUS: NEEDS_CHANGES
+COMMENTS:
+- [Specific issue 1 with file/line reference]
+- [Specific issue 2 with file/line reference]
+</review>
+\`\`\`
+
+## Guidelines
+
+- Focus on REAL issues, not style preferences
+- Each comment must be specific and actionable
+- Reference file names and functions when possible
+- If minor issues exist but functionality is correct, use APPROVED
+- Only use NEEDS_CHANGES for actual bugs or missing functionality
+- Do NOT comment on code that wasn't changed in this diff
+REVIEW_PROMPT_EOF
 }
 
 # Function to render the fix prompt template
+# Uses direct content insertion instead of sed for multiline content (macOS compatible)
 render_fix_prompt() {
   local story_id="$1"
   local story_title="$2"
   local review_feedback="$3"
 
-  if [ ! -f "$FIX_TEMPLATE_FILE" ]; then
-    echo "Error: Fix template not found: $FIX_TEMPLATE_FILE" >&2
-    return 1
-  fi
-
   local quality_checks
   quality_checks=$(build_quality_checks)
-  local escaped_feedback=$(echo "$review_feedback" | sed 's/[&/\]/\\&/g' | sed ':a;N;$!ba;s/\n/\\n/g')
 
-  cat "$FIX_TEMPLATE_FILE" | \
-    sed "s|{{STORY_ID}}|$story_id|g" | \
-    sed "s|{{STORY_TITLE}}|$story_title|g" | \
-    sed "s|{{REVIEW_FEEDBACK}}|$escaped_feedback|g" | \
-    sed "s|{{QUALITY_CHECKS}}|$quality_checks|g" | \
-    sed "s|{{COMPLETION_PROMISE}}|$COMPLETION_PROMISE|g" | \
-    sed "s|{{BLOCKED_PROMISE}}|$BLOCKED_PROMISE|g"
+  # Generate the fix prompt directly (avoiding sed issues with multiline content)
+  cat <<FIX_PROMPT_EOF
+# Code Review Fixes Required
+
+You previously implemented story $story_id: $story_title
+
+The code reviewer found issues that need to be addressed.
+
+## Review Feedback
+
+$review_feedback
+
+## Your Task
+
+1. **Address EACH item** in the review feedback above
+2. **Run quality checks** (typecheck, lint, test) - all must pass
+3. **Commit fixes** with message: \`fix: $story_id - address review feedback\`
+4. When ALL feedback items are resolved, output: <promise>$COMPLETION_PROMISE</promise>
+
+## Important
+
+- Focus ONLY on addressing the review feedback
+- Do NOT refactor unrelated code
+- Keep changes minimal and focused
+- If a feedback item is unclear, make a reasonable interpretation
+- All quality checks must still pass after fixes
+
+## Quality Checks
+$quality_checks
+
+## Completion
+
+When you have:
+- Fixed all issues from the review feedback
+- Passed all quality checks
+- Committed the fixes
+
+Output: <promise>$COMPLETION_PROMISE</promise>
+
+If you cannot fix an issue after reasonable attempts, explain why and output: <promise>$BLOCKED_PROMISE</promise>
+FIX_PROMPT_EOF
 }
 
 # Function to parse review result and extract status
