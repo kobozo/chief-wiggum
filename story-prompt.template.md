@@ -19,14 +19,15 @@ You are an autonomous coding agent working on a single user story.
 
 ## Your Task
 
-1. **Verify Branch:** Ensure you're on the correct branch (`{{BRANCH_NAME}}`). If not, check it out or create from main.
-2. **Read Context:** Check `progress.txt` for learnings from previous iterations (especially the Codebase Patterns section)
-3. **Implement:** Complete this single user story
-4. **Quality Checks:** Run the following quality checks:
+1. **Check Previous Work:** Run `git log --oneline -5` and `git diff HEAD~1` to see what was done in previous iterations
+2. **Verify Branch:** Ensure you're on the correct branch (`{{BRANCH_NAME}}`). If not, check it out or create from main.
+3. **Read Context:** Check `progress.txt` for learnings from previous iterations (especially the Codebase Patterns section)
+4. **Implement:** Continue working on this user story from where the previous iteration left off
+5. **Quality Checks:** Run the following quality checks:
 {{QUALITY_CHECKS}}
-5. **Update CLAUDE.md:** If you discover reusable patterns, add them to nearby CLAUDE.md files
-6. **Commit:** If checks pass, commit ALL changes with message: `feat: {{STORY_ID}} - {{STORY_TITLE}}`
-7. **Update Progress:** Append your progress to `progress.txt`
+6. **Update CLAUDE.md:** If you discover reusable patterns, add them to nearby CLAUDE.md files
+7. **Commit:** If checks pass, commit ALL changes with message: `feat: {{STORY_ID}} - {{STORY_TITLE}}`
+8. **Update Progress:** Append your progress to `progress.txt`
 
 ## Progress Report Format
 

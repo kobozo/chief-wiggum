@@ -542,7 +542,8 @@ run_fix_iteration() {
 
   echo "Applying fixes..."
   local output
-  output=$(cat "$fix_prompt_file" | claude --dangerously-skip-permissions --print --continue 2>&1 | tee /dev/stderr) || true
+  # Run fresh (no --continue) - Claude sees previous work via files/git
+  output=$(cat "$fix_prompt_file" | claude --dangerously-skip-permissions --print 2>&1 | tee /dev/stderr) || true
 
   rm -f "$fix_prompt_file"
 
@@ -623,7 +624,8 @@ while [ $STORY_COUNT -lt $MAX_STORIES ]; do
   STORY_START_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
 
   # Execute Claude with iterative loop (Ralph technique)
-  echo "Starting iterative execution..."
+  # Each iteration runs FRESH - Claude sees previous work via files/git, not conversation memory
+  echo "Starting iterative execution (Ralph technique)..."
   echo "Max iterations: $MAX_ITERATIONS_PER_STORY"
   echo ""
 
@@ -633,17 +635,28 @@ while [ $STORY_COUNT -lt $MAX_STORIES ]; do
   while [ $ITERATION -lt $MAX_ITERATIONS_PER_STORY ]; do
     ITERATION=$((ITERATION + 1))
     echo ""
-    echo "--- Iteration $ITERATION of $MAX_ITERATIONS_PER_STORY ---"
+    echo "=================================================="
+    echo "  Iteration $ITERATION of $MAX_ITERATIONS_PER_STORY"
+    echo "=================================================="
 
-    # Run Claude with the prompt
-    # Use --continue to maintain conversation context between iterations
-    if [ $ITERATION -eq 1 ]; then
-      # First iteration: start fresh
-      OUTPUT=$(cat "$PROMPT_FILE" | claude --dangerously-skip-permissions --print 2>&1 | tee /dev/stderr) || true
-    else
-      # Subsequent iterations: continue with same prompt
-      OUTPUT=$(cat "$PROMPT_FILE" | claude --dangerously-skip-permissions --print --continue 2>&1 | tee /dev/stderr) || true
-    fi
+    # Create iteration-specific prompt with iteration info prepended
+    ITERATION_PROMPT_FILE=$(mktemp)
+    cat > "$ITERATION_PROMPT_FILE" << ITERATION_HEADER
+# Ralph Loop - Iteration $ITERATION of $MAX_ITERATIONS_PER_STORY
+
+You are in an iterative execution loop. Check files and git history to see what was done in previous iterations.
+
+---
+
+ITERATION_HEADER
+    cat "$PROMPT_FILE" >> "$ITERATION_PROMPT_FILE"
+
+    # Run Claude fresh each iteration (Ralph technique)
+    # Claude sees previous work via file system and git, not conversation memory
+    OUTPUT=$(cat "$ITERATION_PROMPT_FILE" | claude --dangerously-skip-permissions --print 2>&1 | tee /dev/stderr) || true
+
+    # Clean up iteration prompt
+    rm -f "$ITERATION_PROMPT_FILE"
 
     # Check for completion or blocked signals
     if echo "$OUTPUT" | grep -q "<promise>$COMPLETION_PROMISE</promise>"; then
@@ -654,8 +667,9 @@ while [ $STORY_COUNT -lt $MAX_STORIES ]; do
       break
     fi
 
-    echo "Iteration $ITERATION complete, continuing..."
-    sleep 1
+    echo ""
+    echo "Iteration $ITERATION complete. Claude will check files/git in next iteration..."
+    sleep 2
   done
 
   # Clean up temp file
