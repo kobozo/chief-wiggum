@@ -92,17 +92,24 @@ These files live in your project directory (not the plugin):
 # Use a custom branch name
 /chief-wiggum --branch feature/my-feature
 
+# Create branch from a specific base branch (not the current one)
+/chief-wiggum --start-branch main
+
 # Combine options
-/chief-wiggum 5 --branch feature/my-feature
+/chief-wiggum 5 --branch feature/my-feature --start-branch main
 ```
 
 ## Branch Management
 
 Chief Wiggum automatically creates a feature branch for PRD execution:
 
-1. **Default behavior**: Creates `chief-wiggum/<project-name>` from current branch
-2. **Custom branch**: Use `--branch <name>` to specify your own branch name
-3. **Existing branch**: If the target branch exists, checks it out instead of creating
+| Option | Description |
+|--------|-------------|
+| (default) | Creates `chief-wiggum/<project-name>` from current branch |
+| `--branch <name>` | Use a custom branch name instead of auto-generated |
+| `--start-branch <base>` | Create the feature branch from a specific base branch |
+
+If the target branch already exists, Chief Wiggum checks it out instead of creating a new one.
 
 The branch name is sanitized (lowercase, spaces to dashes, special chars removed) and stored in `prd.json` as `branchName`.
 
@@ -114,6 +121,12 @@ The branch name is sanitized (lowercase, spaces to dashes, special chars removed
 
 # Explicit branch name
 /chief-wiggum --branch feature/add-user-auth
+
+# Start from main branch instead of current branch
+/chief-wiggum --start-branch main
+
+# Custom branch from main
+/chief-wiggum --branch feature/auth --start-branch main
 ```
 
 ## Commands & Skills
@@ -123,6 +136,7 @@ The branch name is sanitized (lowercase, spaces to dashes, special chars removed
 | `/chief-wiggum` | Execute stories from prd.json (auto-creates branch) |
 | `/chief-wiggum 5` | Execute max 5 stories |
 | `/chief-wiggum --branch <name>` | Execute with custom branch name |
+| `/chief-wiggum --start-branch <base>` | Create feature branch from specified base |
 | `/prd` | Generate a PRD document |
 | `/prd-convert` | Convert PRD markdown to prd.json |
 

@@ -40,6 +40,7 @@ REVIEW_NEEDS_CHANGES=$(jq -r '.codeReview.needsChangesSignal // "NEEDS_CHANGES"'
 # Parse command line arguments
 MAX_STORIES=100
 CUSTOM_BRANCH=""
+START_BRANCH=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -47,9 +48,13 @@ while [[ $# -gt 0 ]]; do
       CUSTOM_BRANCH="$2"
       shift 2
       ;;
+    --start-branch)
+      START_BRANCH="$2"
+      shift 2
+      ;;
     -*)
       echo "Unknown option: $1"
-      echo "Usage: chief-wiggum.sh [max_stories] [--branch <name>]"
+      echo "Usage: chief-wiggum.sh [max_stories] [--branch <name>] [--start-branch <base>]"
       exit 1
       ;;
     *)
@@ -104,6 +109,19 @@ setup_feature_branch() {
     exit 1
   fi
 
+  # Determine the base branch for creating new feature branch
+  local base_branch
+  if [ -n "$START_BRANCH" ]; then
+    base_branch="$START_BRANCH"
+    # Verify the start branch exists
+    if ! git show-ref --verify --quiet "refs/heads/$base_branch" 2>/dev/null; then
+      echo "Error: Start branch '$base_branch' does not exist"
+      exit 1
+    fi
+  else
+    base_branch="$current_git_branch"
+  fi
+
   # Check if we're already on the target branch
   if [ "$current_git_branch" = "$target_branch" ]; then
     echo "Already on branch: $target_branch"
@@ -113,7 +131,12 @@ setup_feature_branch() {
       echo "Checking out existing branch: $target_branch"
       git checkout "$target_branch"
     else
-      echo "Creating new branch: $target_branch (from $current_git_branch)"
+      # If we need to start from a different branch, checkout that first
+      if [ "$base_branch" != "$current_git_branch" ]; then
+        echo "Checking out base branch: $base_branch"
+        git checkout "$base_branch"
+      fi
+      echo "Creating new branch: $target_branch (from $base_branch)"
       git checkout -b "$target_branch"
     fi
   fi
