@@ -18,6 +18,7 @@ PRD_FILE="$WORK_DIR/prd.json"
 PROGRESS_FILE="$WORK_DIR/progress.txt"
 ARCHIVE_DIR="$WORK_DIR/archive"
 LAST_BRANCH_FILE="$WORK_DIR/last-branch"
+LOOP_CONTROL_FILE="$WORK_DIR/wiggum-loop.local.md"
 
 # Files in plugin directory
 CONFIG_FILE="$PLUGIN_DIR/chief-wiggum.config.json"
@@ -42,8 +43,51 @@ REVIEW_APPROVED=$(jq -r '.codeReview.approvedSignal // "APPROVED"' "$CONFIG_FILE
 REVIEW_NEEDS_CHANGES=$(jq -r '.codeReview.needsChangesSignal // "NEEDS_CHANGES"' "$CONFIG_FILE")
 
 # Version info
-SCRIPT_VERSION="1.6.2"
+SCRIPT_VERSION="1.6.3"
 CURRENT_PRD_POINTER="$WORK_DIR/current-prd"
+
+# Loop control file functions
+create_loop_control_file() {
+  mkdir -p "$WORK_DIR"
+  cat > "$LOOP_CONTROL_FILE" << EOF
+# Chief Wiggum Loop Control File
+
+This file indicates that a Chief Wiggum loop is currently running.
+
+**Started:** $(date)
+**PID:** $$
+
+To cancel the running loop, delete this file or run:
+\`\`\`
+/cancel-chief-wiggum
+\`\`\`
+
+The loop will stop at the next iteration check.
+EOF
+  echo "Loop control file created: $LOOP_CONTROL_FILE"
+}
+
+check_loop_control_file() {
+  if [ ! -f "$LOOP_CONTROL_FILE" ]; then
+    return 1
+  fi
+  return 0
+}
+
+remove_loop_control_file() {
+  if [ -f "$LOOP_CONTROL_FILE" ]; then
+    rm -f "$LOOP_CONTROL_FILE"
+    echo "Loop control file removed."
+  fi
+}
+
+# Cleanup function called on exit
+cleanup_on_exit() {
+  remove_loop_control_file
+}
+
+# Set up trap to cleanup on exit (normal exit, error, interrupt)
+trap cleanup_on_exit EXIT
 
 # Parse command line arguments
 MAX_STORIES=100
@@ -607,9 +651,24 @@ echo "Stories: $COMPLETED_STORIES/$TOTAL_STORIES complete"
 echo "Max iterations per story: $MAX_ITERATIONS_PER_STORY"
 echo ""
 
+# Create loop control file to enable cancellation
+create_loop_control_file
+echo ""
+
 STORY_COUNT=0
 
 while [ $STORY_COUNT -lt $MAX_STORIES ]; do
+  # Check if loop was cancelled (control file removed)
+  if ! check_loop_control_file; then
+    echo ""
+    echo "=================================================="
+    echo "  LOOP CANCELLED"
+    echo "=================================================="
+    echo ""
+    echo "Loop control file was removed. Stopping execution."
+    echo "To resume, run /chief-wiggum again."
+    exit 0
+  fi
   # Check if all stories are complete
   if all_stories_complete; then
     echo ""
@@ -665,6 +724,18 @@ while [ $STORY_COUNT -lt $MAX_STORIES ]; do
   STORY_RESULT=""
 
   while [ $ITERATION -lt $MAX_ITERATIONS_PER_STORY ]; do
+    # Check if loop was cancelled (control file removed)
+    if ! check_loop_control_file; then
+      echo ""
+      echo "=================================================="
+      echo "  LOOP CANCELLED (during story iteration)"
+      echo "=================================================="
+      echo ""
+      echo "Loop control file was removed. Stopping execution."
+      echo "Story $STORY_ID may be partially complete."
+      exit 0
+    fi
+
     ITERATION=$((ITERATION + 1))
     echo ""
     echo "=================================================="

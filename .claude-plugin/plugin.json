@@ -1,6 +1,6 @@
 {
   "name": "chief-wiggum",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "Autonomous PRD executor using Claude Code's /ralph-loop for iterative story completion",
   "author": {
     "name": "Kobozo",
