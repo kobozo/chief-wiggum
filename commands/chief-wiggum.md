@@ -37,7 +37,7 @@ fi
 ## What happens:
 
 1. Creates/checks out feature branch (auto-generated or custom)
-2. Reads PRD file (default: `prd.json` in current directory)
+2. Reads PRD file (default: `.chief-wiggum/prd.json`)
 3. Finds highest priority story where `passes: false`
 4. Executes iterative loop (Ralph technique) for that story
 5. On `STORY_COMPLETE`: runs code review, marks story as passed, continues to next
@@ -46,7 +46,7 @@ fi
 
 ## Prerequisites
 
-- PRD file must exist (default: `prd.json` in current directory)
+- PRD file must exist (default: `.chief-wiggum/prd.json`)
 - `jq` must be installed
 - Project should have quality checks configured
 
@@ -62,10 +62,10 @@ fi
 ## Usage
 
 ```bash
-/chief-wiggum                              # Process all stories from prd.json
+/chief-wiggum                              # Process all stories from .chief-wiggum/prd.json
 /chief-wiggum 5                            # Process max 5 stories
 /chief-wiggum --branch feature/auth        # Use custom branch name
 /chief-wiggum --start-branch main          # Create branch from main
-/chief-wiggum --file my-feature.json       # Use custom PRD file
+/chief-wiggum --file custom.json           # Use custom PRD file
 /chief-wiggum 5 --file stories.json --branch feat/x --start-branch main
 ```

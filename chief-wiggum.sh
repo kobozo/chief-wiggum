@@ -42,7 +42,7 @@ REVIEW_APPROVED=$(jq -r '.codeReview.approvedSignal // "APPROVED"' "$CONFIG_FILE
 REVIEW_NEEDS_CHANGES=$(jq -r '.codeReview.needsChangesSignal // "NEEDS_CHANGES"' "$CONFIG_FILE")
 
 # Version info
-SCRIPT_VERSION="1.6.1"
+SCRIPT_VERSION="1.6.2"
 CURRENT_PRD_POINTER="$WORK_DIR/current-prd"
 
 # Parse command line arguments
