@@ -10,20 +10,20 @@ Converts existing PRDs to the prd.json format that Chief Wiggum uses for autonom
 
 ## The Job
 
-Take a PRD (markdown file or text) and convert it to a JSON file (default: `prd.json` in your project directory).
+Take a PRD (markdown file or text) and convert it to a JSON file (default: `.chief-wiggum/prd.json`).
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
 | `<path/to/prd.md>` | Input PRD markdown file (required) |
-| `--file <output.json>` | Output file path (default: `prd.json`) |
+| `--file <output.json>` | Output file path (default: `.chief-wiggum/prd.json`) |
 
 ## Examples
 
 ```bash
-/prd-convert docs/feature-prd.md                    # Output to prd.json
-/prd-convert docs/feature-prd.md --file auth.json   # Output to auth.json
+/prd-convert docs/feature-prd.md                              # Output to .chief-wiggum/prd.json
+/prd-convert docs/feature-prd.md --file .chief-wiggum/auth.json   # Output to custom file
 ```
 
 ## Output Format
@@ -108,10 +108,10 @@ Stories execute in priority order. Earlier stories must not depend on later ones
 
 **Before writing a new prd.json, check if there is an existing one from a different feature:**
 
-1. Read the current `prd.json` if it exists
+1. Read the current `.chief-wiggum/prd.json` if it exists
 2. Check if `branchName` differs from the new feature's branch name
-3. If different AND `progress.txt` has content beyond the header:
-   - Create archive folder: `archive/YYYY-MM-DD-feature-name/`
+3. If different AND `.chief-wiggum/progress.txt` has content beyond the header:
+   - Create archive folder: `.chief-wiggum/archive/YYYY-MM-DD-feature-name/`
    - Copy current `prd.json` and `progress.txt` to archive
    - Reset `progress.txt` with fresh header
 

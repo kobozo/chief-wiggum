@@ -72,13 +72,19 @@ chief-wiggum/
 
 ## User Project Files
 
-These files live in your project directory (not the plugin):
+These files live in your project's `.chief-wiggum/` directory (easy to .gitignore):
 
 | File | Purpose |
 |------|---------|
-| `prd.json` | User stories with `passes` status |
-| `progress.txt` | Append-only learnings log |
-| `archive/` | Previous run archives |
+| `.chief-wiggum/prd.json` | User stories with `passes` status |
+| `.chief-wiggum/progress.txt` | Append-only learnings log |
+| `.chief-wiggum/archive/` | Previous run archives |
+| `.chief-wiggum/last-branch` | Tracks last used branch |
+
+Add to your `.gitignore`:
+```
+.chief-wiggum/
+```
 
 ## Usage
 
@@ -152,7 +158,7 @@ The branch name is sanitized (lowercase, spaces to dashes, special chars removed
 | `/chief-wiggum --start-branch <base>` | Create feature branch from specified base |
 | `/chief-wiggum --file <path>` | Use custom PRD file |
 | `/prd` | Generate a PRD document |
-| `/prd-convert <input> [--file <output>]` | Convert PRD markdown to JSON |
+| `/prd-convert <input> [--file <output>]` | Convert PRD markdown to `.chief-wiggum/prd.json` |
 
 ## Configuration
 
@@ -190,7 +196,7 @@ Edit `chief-wiggum.config.json`:
 
 1. `/chief-wiggum` executes `chief-wiggum.sh`
 2. **Creates/checks out feature branch** (from current branch)
-3. Script reads `prd.json` from current directory
+3. Script reads `.chief-wiggum/prd.json` from current directory
 4. Picks highest priority story where `passes: false`
 5. **Tracks start commit** for code review diff
 6. Renders `story-prompt.template.md` with story data
@@ -224,8 +230,8 @@ Edit `chief-wiggum.config.json`:
 
 Each Claude Code invocation is fresh. Memory persists via:
 - Git history (commits from previous stories)
-- `progress.txt` (learnings and patterns)
-- `prd.json` (story completion status)
+- `.chief-wiggum/progress.txt` (learnings and patterns)
+- `.chief-wiggum/prd.json` (story completion status)
 - `CLAUDE.md` files (codebase patterns)
 
 ## Skills

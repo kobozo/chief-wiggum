@@ -21,17 +21,17 @@ You are an autonomous coding agent working on a single user story.
 
 1. **Check Previous Work:** Run `git log --oneline -5` and `git diff HEAD~1` to see what was done in previous iterations
 2. **Verify Branch:** Ensure you're on the correct branch (`{{BRANCH_NAME}}`). If not, check it out or create from main.
-3. **Read Context:** Check `progress.txt` for learnings from previous iterations (especially the Codebase Patterns section)
+3. **Read Context:** Check `.chief-wiggum/progress.txt` for learnings from previous iterations (especially the Codebase Patterns section)
 4. **Implement:** Continue working on this user story from where the previous iteration left off
 5. **Quality Checks:** Run the following quality checks:
 {{QUALITY_CHECKS}}
 6. **Update CLAUDE.md:** If you discover reusable patterns, add them to nearby CLAUDE.md files
 7. **Commit:** If checks pass, commit ALL changes with message: `feat: {{STORY_ID}} - {{STORY_TITLE}}`
-8. **Update Progress:** Append your progress to `progress.txt`
+8. **Update Progress:** Append your progress to `.chief-wiggum/progress.txt`
 
 ## Progress Report Format
 
-APPEND to progress.txt (never replace, always append):
+APPEND to .chief-wiggum/progress.txt (never replace, always append):
 ```
 ## [Date/Time] - {{STORY_ID}}
 - What was implemented
@@ -63,15 +63,15 @@ When you have successfully:
 - Implemented all acceptance criteria
 - Passed all quality checks
 - Committed the changes
-- Updated progress.txt
+- Updated .chief-wiggum/progress.txt
 
 Output: <promise>{{COMPLETION_PROMISE}}</promise>
 
-If you are blocked and cannot proceed after reasonable attempts, document the blockers in progress.txt and output: <promise>{{BLOCKED_PROMISE}}</promise>
+If you are blocked and cannot proceed after reasonable attempts, document the blockers in .chief-wiggum/progress.txt and output: <promise>{{BLOCKED_PROMISE}}</promise>
 
 ## Important
 
 - Work on THIS story only ({{STORY_ID}})
 - Commit frequently
 - Keep CI green
-- Read the Codebase Patterns section in progress.txt before starting
+- Read the Codebase Patterns section in .chief-wiggum/progress.txt before starting

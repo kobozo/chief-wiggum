@@ -1,10 +1,6 @@
-# Chief Wiggum working files (generated during runs)
-prd.json
-progress.txt
-.last-branch
-
-# Archive is optional to commit
-# archive/
+# Chief Wiggum working directory (generated during runs in user projects)
+# Users should add .chief-wiggum/ to their project's .gitignore
+.chief-wiggum/
 
 # OS files
 .DS_Store

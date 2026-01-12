@@ -9,12 +9,15 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$SCRIPT_DIR"
 
-# Default files in current working directory (user's project)
+# Working directory for chief-wiggum files (easy to .gitignore)
+WORK_DIR="$(pwd)/.chief-wiggum"
+
+# Default files in working directory
 # PRD_FILE can be overridden with --file option
-PRD_FILE="$(pwd)/prd.json"
-PROGRESS_FILE="$(pwd)/progress.txt"
-ARCHIVE_DIR="$(pwd)/archive"
-LAST_BRANCH_FILE="$(pwd)/.chief-wiggum-last-branch"
+PRD_FILE="$WORK_DIR/prd.json"
+PROGRESS_FILE="$WORK_DIR/progress.txt"
+ARCHIVE_DIR="$WORK_DIR/archive"
+LAST_BRANCH_FILE="$WORK_DIR/last-branch"
 
 # Files in plugin directory
 CONFIG_FILE="$PLUGIN_DIR/chief-wiggum.config.json"
@@ -83,10 +86,17 @@ if [ -n "$CUSTOM_PRD_FILE" ]; then
   fi
 fi
 
+# Ensure working directory exists
+mkdir -p "$WORK_DIR"
+
 # Check for required files
 if [ ! -f "$PRD_FILE" ]; then
   echo "Error: PRD file not found: $PRD_FILE"
-  echo "Create a prd.json file with your user stories first."
+  echo "Create a prd.json file in .chief-wiggum/ or use --file to specify location."
+  echo ""
+  echo "Quick start:"
+  echo "  mkdir -p .chief-wiggum"
+  echo "  /prd-convert your-prd.md --file .chief-wiggum/prd.json"
   exit 1
 fi
 
@@ -252,18 +262,19 @@ $acceptance_criteria
 
 ## Your Task
 
-1. **Verify Branch:** Ensure you're on the correct branch (\`$branch_name\`). If not, check it out or create from main.
-2. **Read Context:** Check \`progress.txt\` for learnings from previous iterations (especially the Codebase Patterns section)
-3. **Implement:** Complete this single user story
-4. **Quality Checks:** Run the following quality checks:
+1. **Check Previous Work:** Run \`git log --oneline -5\` and \`git diff HEAD~1\` to see previous iterations
+2. **Verify Branch:** Ensure you're on the correct branch (\`$branch_name\`). If not, check it out or create from main.
+3. **Read Context:** Check \`.chief-wiggum/progress.txt\` for learnings from previous iterations (especially the Codebase Patterns section)
+4. **Implement:** Continue working on this user story from where the previous iteration left off
+5. **Quality Checks:** Run the following quality checks:
 $quality_checks
-5. **Update CLAUDE.md:** If you discover reusable patterns, add them to nearby CLAUDE.md files
-6. **Commit:** If checks pass, commit ALL changes with message: \`feat: $story_id - $story_title\`
-7. **Update Progress:** Append your progress to \`progress.txt\`
+6. **Update CLAUDE.md:** If you discover reusable patterns, add them to nearby CLAUDE.md files
+7. **Commit:** If checks pass, commit ALL changes with message: \`feat: $story_id - $story_title\`
+8. **Update Progress:** Append your progress to \`.chief-wiggum/progress.txt\`
 
 ## Progress Report Format
 
-APPEND to progress.txt (never replace, always append):
+APPEND to .chief-wiggum/progress.txt (never replace, always append):
 \`\`\`
 ## [Date/Time] - $story_id
 - What was implemented
@@ -295,18 +306,18 @@ When you have successfully:
 - Implemented all acceptance criteria
 - Passed all quality checks
 - Committed the changes
-- Updated progress.txt
+- Updated .chief-wiggum/progress.txt
 
 Output: <promise>$COMPLETION_PROMISE</promise>
 
-If you are blocked and cannot proceed after reasonable attempts, document the blockers in progress.txt and output: <promise>$BLOCKED_PROMISE</promise>
+If you are blocked and cannot proceed after reasonable attempts, document the blockers in .chief-wiggum/progress.txt and output: <promise>$BLOCKED_PROMISE</promise>
 
 ## Important
 
 - Work on THIS story only ($story_id)
 - Commit frequently
 - Keep CI green
-- Read the Codebase Patterns section in progress.txt before starting
+- Read the Codebase Patterns section in .chief-wiggum/progress.txt before starting
 STORY_PROMPT_EOF
 }
 
@@ -761,7 +772,7 @@ ITERATION_HEADER
   elif [ "$STORY_RESULT" = "BLOCKED" ]; then
     echo ""
     echo "Story $STORY_ID is BLOCKED!"
-    echo "Check progress.txt for blocker details."
+    echo "Check .chief-wiggum/progress.txt for blocker details."
 
     # Log blocker to progress file
     echo "" >> "$PROGRESS_FILE"
@@ -809,6 +820,6 @@ else
   REMAINING=$(jq -r '.userStories | map(select(.passes == false)) | length' "$PRD_FILE")
   echo "Processed $STORY_COUNT stories."
   echo "Remaining stories: $REMAINING"
-  echo "Check progress.txt for status."
+  echo "Check .chief-wiggum/progress.txt for status."
   exit 1
 fi
