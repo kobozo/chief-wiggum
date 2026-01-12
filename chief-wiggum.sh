@@ -42,7 +42,7 @@ REVIEW_APPROVED=$(jq -r '.codeReview.approvedSignal // "APPROVED"' "$CONFIG_FILE
 REVIEW_NEEDS_CHANGES=$(jq -r '.codeReview.needsChangesSignal // "NEEDS_CHANGES"' "$CONFIG_FILE")
 
 # Version info
-SCRIPT_VERSION="1.6.0"
+SCRIPT_VERSION="1.6.1"
 CURRENT_PRD_POINTER="$WORK_DIR/current-prd"
 
 # Parse command line arguments
@@ -80,13 +80,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Debug: Show initial state
-echo "DEBUG: pwd=$(pwd)"
-echo "DEBUG: WORK_DIR=$WORK_DIR"
-echo "DEBUG: Initial PRD_FILE=$PRD_FILE"
-echo "DEBUG: CUSTOM_PRD_FILE=$CUSTOM_PRD_FILE"
-
-# Apply custom PRD file if specified, or check for saved path
+# Apply custom PRD file if specified
+# Priority: 1) --file arg, 2) default .chief-wiggum/prd.json, 3) saved current-prd pointer
 if [ -n "$CUSTOM_PRD_FILE" ]; then
   # Handle relative and absolute paths
   if [[ "$CUSTOM_PRD_FILE" = /* ]]; then
@@ -94,23 +89,20 @@ if [ -n "$CUSTOM_PRD_FILE" ]; then
   else
     PRD_FILE="$(pwd)/$CUSTOM_PRD_FILE"
   fi
-  echo "DEBUG: After --file: PRD_FILE=$PRD_FILE"
   # Ensure work dir exists before saving pointer
   mkdir -p "$WORK_DIR"
   # Save for future runs
   echo "$PRD_FILE" > "$CURRENT_PRD_POINTER"
+elif [ -f "$PRD_FILE" ]; then
+  # Default .chief-wiggum/prd.json exists, use it
+  :
 elif [ -f "$CURRENT_PRD_POINTER" ]; then
-  # Use saved PRD file path from previous run
+  # Fall back to saved PRD file path from previous run
   SAVED_PRD=$(cat "$CURRENT_PRD_POINTER")
-  echo "DEBUG: Found current-prd pointer: $SAVED_PRD"
   if [ -f "$SAVED_PRD" ]; then
     PRD_FILE="$SAVED_PRD"
-    echo "DEBUG: Using saved path: PRD_FILE=$PRD_FILE"
   fi
 fi
-
-echo "DEBUG: Final PRD_FILE=$PRD_FILE"
-echo "DEBUG: File exists? $([ -f "$PRD_FILE" ] && echo "YES" || echo "NO")"
 
 # Ensure working directory exists
 mkdir -p "$WORK_DIR"
