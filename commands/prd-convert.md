@@ -1,7 +1,7 @@
 ---
 name: prd-convert
 description: "Convert a PRD markdown file to prd.json format for Chief Wiggum execution"
-argument-hint: "<path/to/prd.md>"
+argument-hint: "<path/to/prd.md> [--file <output.json>]"
 ---
 
 # PRD to JSON Converter
@@ -10,7 +10,21 @@ Converts existing PRDs to the prd.json format that Chief Wiggum uses for autonom
 
 ## The Job
 
-Take a PRD (markdown file or text) and convert it to `prd.json` in your project directory.
+Take a PRD (markdown file or text) and convert it to a JSON file (default: `prd.json` in your project directory).
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `<path/to/prd.md>` | Input PRD markdown file (required) |
+| `--file <output.json>` | Output file path (default: `prd.json`) |
+
+## Examples
+
+```bash
+/prd-convert docs/feature-prd.md                    # Output to prd.json
+/prd-convert docs/feature-prd.md --file auth.json   # Output to auth.json
+```
 
 ## Output Format
 

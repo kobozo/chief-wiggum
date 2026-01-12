@@ -95,23 +95,33 @@ These files live in your project directory (not the plugin):
 # Create branch from a specific base branch (not the current one)
 /chief-wiggum --start-branch main
 
+# Use a custom PRD file instead of prd.json
+/chief-wiggum --file my-feature.json
+
 # Combine options
-/chief-wiggum 5 --branch feature/my-feature --start-branch main
+/chief-wiggum 5 --branch feature/my-feature --start-branch main --file stories.json
 ```
+
+## Command Options
+
+| Option | Description |
+|--------|-------------|
+| `[max_stories]` | Maximum number of stories to process (default: all) |
+| `--branch <name>` | Use a custom branch name instead of auto-generated |
+| `--start-branch <base>` | Create the feature branch from a specific base branch |
+| `--file <path>` | Use a custom PRD file instead of `prd.json` |
 
 ## Branch Management
 
 Chief Wiggum automatically creates a feature branch for PRD execution:
 
-| Option | Description |
-|--------|-------------|
-| (default) | Creates `chief-wiggum/<project-name>` from current branch |
-| `--branch <name>` | Use a custom branch name instead of auto-generated |
-| `--start-branch <base>` | Create the feature branch from a specific base branch |
+- **Default**: Creates `chief-wiggum/<project-name>` from current branch
+- **Custom branch**: Use `--branch <name>` to specify your own branch name
+- **Base branch**: Use `--start-branch <base>` to branch from a specific branch
 
 If the target branch already exists, Chief Wiggum checks it out instead of creating a new one.
 
-The branch name is sanitized (lowercase, spaces to dashes, special chars removed) and stored in `prd.json` as `branchName`.
+The branch name is sanitized (lowercase, spaces to dashes, special chars removed) and stored in the PRD file as `branchName`.
 
 ### Examples
 
@@ -127,6 +137,9 @@ The branch name is sanitized (lowercase, spaces to dashes, special chars removed
 
 # Custom branch from main
 /chief-wiggum --branch feature/auth --start-branch main
+
+# Use a different PRD file
+/chief-wiggum --file auth-stories.json --start-branch main
 ```
 
 ## Commands & Skills
@@ -137,8 +150,9 @@ The branch name is sanitized (lowercase, spaces to dashes, special chars removed
 | `/chief-wiggum 5` | Execute max 5 stories |
 | `/chief-wiggum --branch <name>` | Execute with custom branch name |
 | `/chief-wiggum --start-branch <base>` | Create feature branch from specified base |
+| `/chief-wiggum --file <path>` | Use custom PRD file |
 | `/prd` | Generate a PRD document |
-| `/prd-convert` | Convert PRD markdown to prd.json |
+| `/prd-convert <input> [--file <output>]` | Convert PRD markdown to JSON |
 
 ## Configuration
 

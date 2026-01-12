@@ -1,7 +1,7 @@
 #!/bin/bash
 # Chief Wiggum - Autonomous PRD executor for Claude Code
 # Two-tier architecture: Chief Wiggum (outer loop) + /ralph-loop (inner loop per story)
-# Usage: ./chief-wiggum.sh [max_stories] [--branch <name>] or via /chief-wiggum command
+# Usage: ./chief-wiggum.sh [max_stories] [--branch <name>] [--start-branch <base>] [--file <prd.json>]
 
 set -e
 
@@ -9,7 +9,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$SCRIPT_DIR"
 
-# Files in current working directory (user's project)
+# Default files in current working directory (user's project)
+# PRD_FILE can be overridden with --file option
 PRD_FILE="$(pwd)/prd.json"
 PROGRESS_FILE="$(pwd)/progress.txt"
 ARCHIVE_DIR="$(pwd)/archive"
@@ -41,6 +42,7 @@ REVIEW_NEEDS_CHANGES=$(jq -r '.codeReview.needsChangesSignal // "NEEDS_CHANGES"'
 MAX_STORIES=100
 CUSTOM_BRANCH=""
 START_BRANCH=""
+CUSTOM_PRD_FILE=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -52,9 +54,13 @@ while [[ $# -gt 0 ]]; do
       START_BRANCH="$2"
       shift 2
       ;;
+    --file)
+      CUSTOM_PRD_FILE="$2"
+      shift 2
+      ;;
     -*)
       echo "Unknown option: $1"
-      echo "Usage: chief-wiggum.sh [max_stories] [--branch <name>] [--start-branch <base>]"
+      echo "Usage: chief-wiggum.sh [max_stories] [--branch <name>] [--start-branch <base>] [--file <prd.json>]"
       exit 1
       ;;
     *)
@@ -66,6 +72,16 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Apply custom PRD file if specified
+if [ -n "$CUSTOM_PRD_FILE" ]; then
+  # Handle relative and absolute paths
+  if [[ "$CUSTOM_PRD_FILE" = /* ]]; then
+    PRD_FILE="$CUSTOM_PRD_FILE"
+  else
+    PRD_FILE="$(pwd)/$CUSTOM_PRD_FILE"
+  fi
+fi
 
 # Check for required files
 if [ ! -f "$PRD_FILE" ]; then
