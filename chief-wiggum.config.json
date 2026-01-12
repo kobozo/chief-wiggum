@@ -2,6 +2,12 @@
   "maxIterationsPerStory": 25,
   "completionPromise": "STORY_COMPLETE",
   "blockedPromise": "BLOCKED",
+  "codeReview": {
+    "enabled": true,
+    "maxCycles": 3,
+    "approvedSignal": "APPROVED",
+    "needsChangesSignal": "NEEDS_CHANGES"
+  },
   "qualityChecks": [
     {
       "name": "typecheck",

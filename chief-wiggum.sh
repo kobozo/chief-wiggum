@@ -18,6 +18,8 @@ LAST_BRANCH_FILE="$(pwd)/.chief-wiggum-last-branch"
 # Files in plugin directory
 CONFIG_FILE="$PLUGIN_DIR/chief-wiggum.config.json"
 TEMPLATE_FILE="$PLUGIN_DIR/story-prompt.template.md"
+REVIEW_TEMPLATE_FILE="$PLUGIN_DIR/review-prompt.template.md"
+FIX_TEMPLATE_FILE="$PLUGIN_DIR/review-fix-prompt.template.md"
 
 # Load configuration
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -28,6 +30,12 @@ fi
 MAX_ITERATIONS_PER_STORY=$(jq -r '.maxIterationsPerStory // 25' "$CONFIG_FILE")
 COMPLETION_PROMISE=$(jq -r '.completionPromise // "STORY_COMPLETE"' "$CONFIG_FILE")
 BLOCKED_PROMISE=$(jq -r '.blockedPromise // "BLOCKED"' "$CONFIG_FILE")
+
+# Code review configuration
+CODE_REVIEW_ENABLED=$(jq -r '.codeReview.enabled // true' "$CONFIG_FILE")
+MAX_REVIEW_CYCLES=$(jq -r '.codeReview.maxCycles // 3' "$CONFIG_FILE")
+REVIEW_APPROVED=$(jq -r '.codeReview.approvedSignal // "APPROVED"' "$CONFIG_FILE")
+REVIEW_NEEDS_CHANGES=$(jq -r '.codeReview.needsChangesSignal // "NEEDS_CHANGES"' "$CONFIG_FILE")
 
 # Command line args override config
 MAX_STORIES=${1:-100}
@@ -135,6 +143,154 @@ all_stories_complete() {
   [ "$incomplete" -eq 0 ]
 }
 
+# Function to capture git diff for a story (from start commit to HEAD)
+capture_story_diff() {
+  local start_commit="$1"
+  if [ -n "$start_commit" ]; then
+    git diff "$start_commit"..HEAD 2>/dev/null || git diff HEAD~1..HEAD 2>/dev/null || echo "No diff available"
+  else
+    git diff HEAD~1..HEAD 2>/dev/null || echo "No diff available"
+  fi
+}
+
+# Function to render the review prompt template
+render_review_prompt() {
+  local story_id="$1"
+  local story_title="$2"
+  local acceptance_criteria="$3"
+  local git_diff="$4"
+  local previous_feedback="$5"
+
+  if [ ! -f "$REVIEW_TEMPLATE_FILE" ]; then
+    echo "Error: Review template not found: $REVIEW_TEMPLATE_FILE" >&2
+    return 1
+  fi
+
+  # Escape special characters in git diff for sed
+  local escaped_diff=$(echo "$git_diff" | sed 's/[&/\]/\\&/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+  local escaped_feedback=$(echo "$previous_feedback" | sed 's/[&/\]/\\&/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+
+  cat "$REVIEW_TEMPLATE_FILE" | \
+    sed "s|{{STORY_ID}}|$story_id|g" | \
+    sed "s|{{STORY_TITLE}}|$story_title|g" | \
+    sed "s|{{ACCEPTANCE_CRITERIA}}|$acceptance_criteria|g" | \
+    sed "s|{{GIT_DIFF}}|$escaped_diff|g" | \
+    sed "s|{{PREVIOUS_FEEDBACK}}|$escaped_feedback|g"
+}
+
+# Function to render the fix prompt template
+render_fix_prompt() {
+  local story_id="$1"
+  local story_title="$2"
+  local review_feedback="$3"
+
+  if [ ! -f "$FIX_TEMPLATE_FILE" ]; then
+    echo "Error: Fix template not found: $FIX_TEMPLATE_FILE" >&2
+    return 1
+  fi
+
+  local quality_checks
+  quality_checks=$(build_quality_checks)
+  local escaped_feedback=$(echo "$review_feedback" | sed 's/[&/\]/\\&/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+
+  cat "$FIX_TEMPLATE_FILE" | \
+    sed "s|{{STORY_ID}}|$story_id|g" | \
+    sed "s|{{STORY_TITLE}}|$story_title|g" | \
+    sed "s|{{REVIEW_FEEDBACK}}|$escaped_feedback|g" | \
+    sed "s|{{QUALITY_CHECKS}}|$quality_checks|g" | \
+    sed "s|{{COMPLETION_PROMISE}}|$COMPLETION_PROMISE|g" | \
+    sed "s|{{BLOCKED_PROMISE}}|$BLOCKED_PROMISE|g"
+}
+
+# Function to parse review result and extract status
+parse_review_status() {
+  local output="$1"
+  if echo "$output" | grep -q "STATUS: $REVIEW_APPROVED"; then
+    echo "APPROVED"
+  elif echo "$output" | grep -q "STATUS: $REVIEW_NEEDS_CHANGES"; then
+    echo "NEEDS_CHANGES"
+  else
+    echo "UNCLEAR"
+  fi
+}
+
+# Function to extract review comments from output
+extract_review_comments() {
+  local output="$1"
+  # Extract content between <review> tags, get lines starting with -
+  echo "$output" | sed -n '/<review>/,/<\/review>/p' | grep "^-" | sed 's/^- //' || echo ""
+}
+
+# Function to run a single review cycle
+run_review_cycle() {
+  local story_id="$1"
+  local story_title="$2"
+  local acceptance_criteria="$3"
+  local start_commit="$4"
+  local previous_feedback="$5"
+
+  echo "Capturing git diff..."
+  local git_diff
+  git_diff=$(capture_story_diff "$start_commit")
+
+  echo "Rendering review prompt..."
+  local review_prompt
+  review_prompt=$(render_review_prompt "$story_id" "$story_title" "$acceptance_criteria" "$git_diff" "$previous_feedback")
+
+  local review_prompt_file=$(mktemp)
+  echo "$review_prompt" > "$review_prompt_file"
+
+  echo "Running code review..."
+  local output
+  output=$(cat "$review_prompt_file" | claude --dangerously-skip-permissions --print 2>&1 | tee /dev/stderr) || true
+
+  rm -f "$review_prompt_file"
+
+  # Parse the result
+  local status
+  status=$(parse_review_status "$output")
+
+  if [ "$status" = "APPROVED" ]; then
+    echo "REVIEW_APPROVED"
+  elif [ "$status" = "NEEDS_CHANGES" ]; then
+    # Extract and return the comments
+    local comments
+    comments=$(extract_review_comments "$output")
+    echo "REVIEW_NEEDS_CHANGES:$comments"
+  else
+    echo "REVIEW_UNCLEAR"
+  fi
+}
+
+# Function to run a fix iteration based on review feedback
+run_fix_iteration() {
+  local story_id="$1"
+  local story_title="$2"
+  local review_feedback="$3"
+
+  echo "Rendering fix prompt..."
+  local fix_prompt
+  fix_prompt=$(render_fix_prompt "$story_id" "$story_title" "$review_feedback")
+
+  local fix_prompt_file=$(mktemp)
+  echo "$fix_prompt" > "$fix_prompt_file"
+
+  echo "Applying fixes..."
+  local output
+  output=$(cat "$fix_prompt_file" | claude --dangerously-skip-permissions --print --continue 2>&1 | tee /dev/stderr) || true
+
+  rm -f "$fix_prompt_file"
+
+  # Check for completion signal
+  if echo "$output" | grep -q "<promise>$COMPLETION_PROMISE</promise>"; then
+    echo "FIX_COMPLETE"
+  elif echo "$output" | grep -q "<promise>$BLOCKED_PROMISE</promise>"; then
+    echo "FIX_BLOCKED"
+  else
+    echo "FIX_INCOMPLETE"
+  fi
+}
+
 # Main execution
 echo "=================================================="
 echo "  Chief Wiggum - Claude Code Story Orchestrator"
@@ -198,6 +354,9 @@ while [ $STORY_COUNT -lt $MAX_STORIES ]; do
   PROMPT_FILE=$(mktemp)
   echo "$PROMPT" > "$PROMPT_FILE"
 
+  # Track start commit for code review diff
+  STORY_START_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
+
   # Execute Claude with iterative loop (Ralph technique)
   echo "Starting iterative execution..."
   echo "Max iterations: $MAX_ITERATIONS_PER_STORY"
@@ -243,19 +402,82 @@ while [ $STORY_COUNT -lt $MAX_STORIES ]; do
   # Check for completion signal
   if [ "$STORY_RESULT" = "COMPLETE" ]; then
     echo ""
-    echo "Story $STORY_ID completed successfully!"
-    mark_story_complete "$STORY_ID"
+    echo "Story $STORY_ID implementation complete!"
 
-    # Update progress
-    COMPLETED_STORIES=$((COMPLETED_STORIES + 1))
-    echo ""
-    echo "Progress: $COMPLETED_STORIES/$TOTAL_STORIES stories complete"
+    # Code review phase (if enabled)
+    REVIEW_PASSED=false
+    if [ "$CODE_REVIEW_ENABLED" = "true" ]; then
+      echo ""
+      echo "=================================================="
+      echo "  Code Review Phase"
+      echo "=================================================="
 
-    # Log completion to progress file
-    echo "" >> "$PROGRESS_FILE"
-    echo "## $(date) - $STORY_ID COMPLETED" >> "$PROGRESS_FILE"
-    echo "Story: $STORY_TITLE" >> "$PROGRESS_FILE"
-    echo "---" >> "$PROGRESS_FILE"
+      REVIEW_CYCLE=0
+      REVIEW_FEEDBACK=""
+
+      while [ $REVIEW_CYCLE -lt $MAX_REVIEW_CYCLES ]; do
+        REVIEW_CYCLE=$((REVIEW_CYCLE + 1))
+        echo ""
+        echo "--- Review Cycle $REVIEW_CYCLE of $MAX_REVIEW_CYCLES ---"
+
+        REVIEW_RESULT=$(run_review_cycle "$STORY_ID" "$STORY_TITLE" "$ACCEPTANCE_CRITERIA" "$STORY_START_COMMIT" "$REVIEW_FEEDBACK")
+
+        if [ "$REVIEW_RESULT" = "REVIEW_APPROVED" ]; then
+          echo ""
+          echo "Code review APPROVED!"
+          REVIEW_PASSED=true
+          break
+        elif [[ "$REVIEW_RESULT" == REVIEW_NEEDS_CHANGES:* ]]; then
+          REVIEW_FEEDBACK="${REVIEW_RESULT#REVIEW_NEEDS_CHANGES:}"
+          echo ""
+          echo "Code review found issues. Running fix iteration..."
+          echo "Feedback: $REVIEW_FEEDBACK"
+
+          FIX_RESULT=$(run_fix_iteration "$STORY_ID" "$STORY_TITLE" "$REVIEW_FEEDBACK")
+
+          if [ "$FIX_RESULT" = "FIX_BLOCKED" ]; then
+            echo "Fix iteration blocked. Stopping review cycles."
+            break
+          fi
+          # Continue to next review cycle
+        else
+          echo ""
+          echo "Review result unclear, treating as approved."
+          REVIEW_PASSED=true
+          break
+        fi
+      done
+
+      if [ "$REVIEW_PASSED" = false ] && [ $REVIEW_CYCLE -ge $MAX_REVIEW_CYCLES ]; then
+        echo ""
+        echo "Max review cycles ($MAX_REVIEW_CYCLES) reached without full approval."
+        echo "Marking story as complete anyway to continue progress."
+        REVIEW_PASSED=true
+      fi
+    else
+      # Code review disabled, auto-pass
+      REVIEW_PASSED=true
+    fi
+
+    if [ "$REVIEW_PASSED" = true ]; then
+      echo ""
+      echo "Story $STORY_ID completed and reviewed successfully!"
+      mark_story_complete "$STORY_ID"
+
+      # Update progress
+      COMPLETED_STORIES=$((COMPLETED_STORIES + 1))
+      echo ""
+      echo "Progress: $COMPLETED_STORIES/$TOTAL_STORIES stories complete"
+
+      # Log completion to progress file
+      echo "" >> "$PROGRESS_FILE"
+      echo "## $(date) - $STORY_ID COMPLETED" >> "$PROGRESS_FILE"
+      echo "Story: $STORY_TITLE" >> "$PROGRESS_FILE"
+      if [ "$CODE_REVIEW_ENABLED" = "true" ]; then
+        echo "Review cycles: $REVIEW_CYCLE" >> "$PROGRESS_FILE"
+      fi
+      echo "---" >> "$PROGRESS_FILE"
+    fi
 
   elif [ "$STORY_RESULT" = "BLOCKED" ]; then
     echo ""

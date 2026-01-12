@@ -28,10 +28,14 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
     ├── Executes chief-wiggum.sh
     │
     └── For each story in prd.json:
-        ├── Renders prompt from story-prompt.template.md
-        ├── Spawns: claude --print "/ralph-loop <prompt>"
-        ├── Detects STORY_COMPLETE or BLOCKED
-        ├── Updates prd.json (passes: true)
+        ├── 1. TRACK: Save current git commit
+        ├── 2. EXECUTE: Iterative Claude loop until STORY_COMPLETE
+        ├── 3. REVIEW: Code review phase (up to 3 cycles)
+        │       ├── Capture git diff
+        │       ├── Run code-reviewer agent
+        │       ├── If APPROVED → mark complete
+        │       └── If NEEDS_CHANGES → fix iteration, re-review
+        ├── 4. UPDATE: prd.json (passes: true)
         ├── Archives previous runs when branch changes
         └── Continues to next story
 ```
@@ -45,7 +49,8 @@ chief-wiggum/
 ├── commands/
 │   └── chief-wiggum.md          # /chief-wiggum command → executes chief-wiggum.sh
 ├── agents/
-│   └── story-executor.md        # Optional agent for story execution
+│   ├── story-executor.md        # Optional agent for story execution
+│   └── code-reviewer.md         # Code review agent for post-story review
 ├── skills/
 │   ├── prd/
 │   │   └── SKILL.md             # PRD generation skill
@@ -56,7 +61,9 @@ chief-wiggum/
 │   └── stop-hook.sh             # Stop event handler
 ├── chief-wiggum.sh              # Main orchestrator script
 ├── chief-wiggum.config.json     # Configuration
-└── story-prompt.template.md     # Prompt template for stories
+├── story-prompt.template.md     # Prompt template for stories
+├── review-prompt.template.md    # Prompt template for code reviews
+└── review-fix-prompt.template.md # Prompt template for fix iterations
 ```
 
 ## User Project Files
@@ -97,6 +104,12 @@ Edit `chief-wiggum.config.json`:
   "maxIterationsPerStory": 25,
   "completionPromise": "STORY_COMPLETE",
   "blockedPromise": "BLOCKED",
+  "codeReview": {
+    "enabled": true,
+    "maxCycles": 3,
+    "approvedSignal": "APPROVED",
+    "needsChangesSignal": "NEEDS_CHANGES"
+  },
   "qualityChecks": [
     {"name": "typecheck", "command": "npm run typecheck"},
     {"name": "lint", "command": "npm run lint"},
@@ -105,16 +118,31 @@ Edit `chief-wiggum.config.json`:
 }
 ```
 
+### Code Review Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `enabled` | `true` | Enable/disable code review after each story |
+| `maxCycles` | `3` | Maximum review-fix cycles before auto-approving |
+| `approvedSignal` | `APPROVED` | Signal from reviewer indicating approval |
+| `needsChangesSignal` | `NEEDS_CHANGES` | Signal indicating fixes needed |
+
 ## Story Lifecycle
 
 1. `/chief-wiggum` executes `chief-wiggum.sh`
 2. Script reads `prd.json` from current directory
 3. Picks highest priority story where `passes: false`
-4. Renders `story-prompt.template.md` with story data
-5. Spawns Claude with `/ralph-loop`
-6. On `STORY_COMPLETE`: marks story as passed, continues
-7. On `BLOCKED`: stops and logs blocker
-8. On timeout: logs and continues to next story
+4. **Tracks start commit** for code review diff
+5. Renders `story-prompt.template.md` with story data
+6. Executes iterative Claude loop (Ralph technique)
+7. On `STORY_COMPLETE`: **enters code review phase**
+8. **Code Review Phase** (up to 3 cycles):
+   - Captures git diff from start commit
+   - Runs code-reviewer agent
+   - If `APPROVED`: marks story complete
+   - If `NEEDS_CHANGES`: runs fix iteration, re-reviews
+9. On `BLOCKED`: stops and logs blocker
+10. On timeout: logs and stops execution
 
 ## Promise System
 
@@ -145,6 +173,39 @@ Generates detailed Product Requirements Documents from feature descriptions.
 
 ### PRD Convert Command (`/prd-convert`)
 Converts PRD markdown files to `prd.json` format for Chief Wiggum execution.
+
+## Code Review
+
+After each story completes (`STORY_COMPLETE`), Chief Wiggum automatically runs a code review:
+
+### How It Works
+
+1. **Diff Capture**: Git diff from the commit before story started to HEAD
+2. **Review**: Code reviewer agent analyzes the diff against acceptance criteria
+3. **Fix Cycle**: If issues found, runs a fix iteration and re-reviews
+4. **Max Cycles**: After 3 review cycles, auto-approves to continue progress
+
+### Review Focus
+
+The code-reviewer agent checks:
+- **Correctness**: All acceptance criteria implemented
+- **Bugs**: Logic errors, edge cases, null risks
+- **Patterns**: Code follows existing codebase patterns
+- **Completeness**: Tests, types, error handling present
+
+### Review Output Format
+
+```
+<review>
+STATUS: APPROVED | NEEDS_CHANGES
+COMMENTS:
+- [Specific, actionable items if NEEDS_CHANGES]
+</review>
+```
+
+### Disabling Code Review
+
+Set `codeReview.enabled` to `false` in config to skip the review phase.
 
 ## Best Practices
 
