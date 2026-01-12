@@ -25,16 +25,20 @@ git clone https://github.com/kobozo/chief-wiggum ~/.claude/plugins/chief-wiggum
 ```
 /chief-wiggum
     │
+    ├── 1. BRANCH: Create/checkout feature branch
+    │      └── chief-wiggum/<project-name> or --branch <custom>
+    │
     ├── Executes chief-wiggum.sh
     │
     └── For each story in prd.json:
         ├── 1. TRACK: Save current git commit
         ├── 2. EXECUTE: Iterative Claude loop until STORY_COMPLETE
+        │       └── Story commits: feat: <STORY_ID> - <STORY_TITLE>
         ├── 3. REVIEW: Code review phase (up to 3 cycles)
         │       ├── Capture git diff
         │       ├── Run code-reviewer agent
         │       ├── If APPROVED → mark complete
-        │       └── If NEEDS_CHANGES → fix iteration, re-review
+        │       └── If NEEDS_CHANGES → fix iteration (fix: <STORY_ID>), re-review
         ├── 4. UPDATE: prd.json (passes: true)
         ├── Archives previous runs when branch changes
         └── Continues to next story
@@ -79,19 +83,46 @@ These files live in your project directory (not the plugin):
 ## Usage
 
 ```bash
-# Execute all stories
+# Execute all stories (creates branch from PRD project name)
 /chief-wiggum
 
 # Limit to N stories
 /chief-wiggum 5
+
+# Use a custom branch name
+/chief-wiggum --branch feature/my-feature
+
+# Combine options
+/chief-wiggum 5 --branch feature/my-feature
+```
+
+## Branch Management
+
+Chief Wiggum automatically creates a feature branch for PRD execution:
+
+1. **Default behavior**: Creates `chief-wiggum/<project-name>` from current branch
+2. **Custom branch**: Use `--branch <name>` to specify your own branch name
+3. **Existing branch**: If the target branch exists, checks it out instead of creating
+
+The branch name is sanitized (lowercase, spaces to dashes, special chars removed) and stored in `prd.json` as `branchName`.
+
+### Examples
+
+```bash
+# PRD with project "My Cool Feature" creates: chief-wiggum/my-cool-feature
+/chief-wiggum
+
+# Explicit branch name
+/chief-wiggum --branch feature/add-user-auth
 ```
 
 ## Commands & Skills
 
 | Command/Skill | Description |
 |---------------|-------------|
-| `/chief-wiggum` | Execute stories from prd.json via ralph-loop |
+| `/chief-wiggum` | Execute stories from prd.json (auto-creates branch) |
 | `/chief-wiggum 5` | Execute max 5 stories |
+| `/chief-wiggum --branch <name>` | Execute with custom branch name |
 | `/prd` | Generate a PRD document |
 | `/prd-convert` | Convert PRD markdown to prd.json |
 
@@ -130,19 +161,22 @@ Edit `chief-wiggum.config.json`:
 ## Story Lifecycle
 
 1. `/chief-wiggum` executes `chief-wiggum.sh`
-2. Script reads `prd.json` from current directory
-3. Picks highest priority story where `passes: false`
-4. **Tracks start commit** for code review diff
-5. Renders `story-prompt.template.md` with story data
-6. Executes iterative Claude loop (Ralph technique)
-7. On `STORY_COMPLETE`: **enters code review phase**
-8. **Code Review Phase** (up to 3 cycles):
+2. **Creates/checks out feature branch** (from current branch)
+3. Script reads `prd.json` from current directory
+4. Picks highest priority story where `passes: false`
+5. **Tracks start commit** for code review diff
+6. Renders `story-prompt.template.md` with story data
+7. Executes iterative Claude loop (Ralph technique)
+8. On `STORY_COMPLETE`:
+   - Story code is committed: `feat: <STORY_ID> - <STORY_TITLE>`
+   - **Enters code review phase**
+9. **Code Review Phase** (up to 3 cycles):
    - Captures git diff from start commit
    - Runs code-reviewer agent
    - If `APPROVED`: marks story complete
-   - If `NEEDS_CHANGES`: runs fix iteration, re-reviews
-9. On `BLOCKED`: stops and logs blocker
-10. On timeout: logs and stops execution
+   - If `NEEDS_CHANGES`: runs fix iteration, commits: `fix: <STORY_ID> - address review feedback`, re-reviews
+10. On `BLOCKED`: stops and logs blocker
+11. On timeout: logs and stops execution
 
 ## Promise System
 

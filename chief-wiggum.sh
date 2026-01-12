@@ -1,7 +1,7 @@
 #!/bin/bash
 # Chief Wiggum - Autonomous PRD executor for Claude Code
 # Two-tier architecture: Chief Wiggum (outer loop) + /ralph-loop (inner loop per story)
-# Usage: ./chief-wiggum.sh [max_stories] or via /chief-wiggum command
+# Usage: ./chief-wiggum.sh [max_stories] [--branch <name>] or via /chief-wiggum command
 
 set -e
 
@@ -37,8 +37,30 @@ MAX_REVIEW_CYCLES=$(jq -r '.codeReview.maxCycles // 3' "$CONFIG_FILE")
 REVIEW_APPROVED=$(jq -r '.codeReview.approvedSignal // "APPROVED"' "$CONFIG_FILE")
 REVIEW_NEEDS_CHANGES=$(jq -r '.codeReview.needsChangesSignal // "NEEDS_CHANGES"' "$CONFIG_FILE")
 
-# Command line args override config
-MAX_STORIES=${1:-100}
+# Parse command line arguments
+MAX_STORIES=100
+CUSTOM_BRANCH=""
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --branch)
+      CUSTOM_BRANCH="$2"
+      shift 2
+      ;;
+    -*)
+      echo "Unknown option: $1"
+      echo "Usage: chief-wiggum.sh [max_stories] [--branch <name>]"
+      exit 1
+      ;;
+    *)
+      # Assume it's max_stories if it's a number
+      if [[ "$1" =~ ^[0-9]+$ ]]; then
+        MAX_STORIES="$1"
+      fi
+      shift
+      ;;
+  esac
+done
 
 # Check for required files
 if [ ! -f "$PRD_FILE" ]; then
@@ -51,6 +73,63 @@ if [ ! -f "$TEMPLATE_FILE" ]; then
   echo "Error: Template file not found: $TEMPLATE_FILE"
   exit 1
 fi
+
+# Function to sanitize branch name (lowercase, replace spaces/special chars with dashes)
+sanitize_branch_name() {
+  echo "$1" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd '[:alnum:]-_'
+}
+
+# Branch management - create feature branch for PRD execution
+setup_feature_branch() {
+  local project_name
+  project_name=$(jq -r '.project // "feature"' "$PRD_FILE")
+
+  # Determine branch name
+  local target_branch
+  if [ -n "$CUSTOM_BRANCH" ]; then
+    target_branch="$CUSTOM_BRANCH"
+  else
+    # Generate branch name from project name with chief-wiggum prefix
+    local sanitized_name
+    sanitized_name=$(sanitize_branch_name "$project_name")
+    target_branch="chief-wiggum/$sanitized_name"
+  fi
+
+  # Get current branch
+  local current_git_branch
+  current_git_branch=$(git branch --show-current 2>/dev/null || echo "")
+
+  if [ -z "$current_git_branch" ]; then
+    echo "Error: Not in a git repository or no branch checked out"
+    exit 1
+  fi
+
+  # Check if we're already on the target branch
+  if [ "$current_git_branch" = "$target_branch" ]; then
+    echo "Already on branch: $target_branch"
+  else
+    # Check if target branch exists
+    if git show-ref --verify --quiet "refs/heads/$target_branch" 2>/dev/null; then
+      echo "Checking out existing branch: $target_branch"
+      git checkout "$target_branch"
+    else
+      echo "Creating new branch: $target_branch (from $current_git_branch)"
+      git checkout -b "$target_branch"
+    fi
+  fi
+
+  # Update prd.json with the branch name
+  local tmp_file
+  tmp_file=$(mktemp)
+  jq --arg branch "$target_branch" '.branchName = $branch' "$PRD_FILE" > "$tmp_file"
+  mv "$tmp_file" "$PRD_FILE"
+
+  echo "Branch ready: $target_branch"
+  echo ""
+}
+
+# Set up feature branch before starting
+setup_feature_branch
 
 # Archive previous run if branch changed
 if [ -f "$PRD_FILE" ] && [ -f "$LAST_BRANCH_FILE" ]; then
